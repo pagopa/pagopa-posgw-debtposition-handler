@@ -15,7 +15,7 @@ plugins {
 
 group = "it.pagopa"
 
-version = "0.0.6"
+version = "0.0.1"
 
 apply(plugin = "com.dipien.semantic-version")
 
@@ -131,9 +131,9 @@ graalvmNative {
   }
 }
 
-//tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>(
+// tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>(
 //  "debtposition-handler"
-//) {
+// ) {
 //  description = "Generate debtposition-handler API client"
 //  group = "openapi-generation"
 //  generatorName.set("kotlin-spring")
@@ -161,17 +161,17 @@ graalvmNative {
 //      "enumPropertyNaming" to "UPPERCASE",
 //    )
 //  )
-//}
+// }
 //
-//sourceSets {
+// sourceSets {
 //  named("main") {
 //    kotlin.srcDir(layout.buildDirectory.dir("generated/src/main/kotlin"))
 //  }
-//}
+// }
 //
-//tasks.named("compileKotlin") {
+// tasks.named("compileKotlin") {
 //  dependsOn("debtposition-handler")
-//}
+// }
 
 /**
  * Task used to expand application properties with build specific properties such as artifact name
