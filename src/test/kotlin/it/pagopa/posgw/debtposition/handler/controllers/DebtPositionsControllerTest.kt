@@ -5,14 +5,14 @@ import it.pagopa.generated.posgw.debtposition.handler.model.DebtorDto
 import it.pagopa.generated.posgw.debtposition.handler.model.InstallmentDetailDto
 import it.pagopa.generated.posgw.debtposition.handler.model.PaymentOptionDto
 import it.pagopa.generated.posgw.debtposition.handler.model.TransferItemDto
+import java.time.OffsetDateTime
+import java.util.UUID
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
-import java.time.OffsetDateTime
-import java.util.UUID
 
 class DebtPositionsControllerTest {
 
@@ -26,29 +26,25 @@ class DebtPositionsControllerTest {
     }
 
     private fun buildSampleDebtPositionRequestDto(): DebtPositionRequestDto {
-        val transferItem = TransferItemDto(
-            amount = 1000L,
-            remittanceInformation = "/RFB/02000100000012345/CNR/ROSMRI87A04H501K/TXT/Causale",
-            iban = "IT0000000000000000000000000",
-            category = "9/0101100SP/"
-        )
+        val transferItem =
+            TransferItemDto(
+                amount = 1000L,
+                remittanceInformation = "/RFB/02000100000012345/CNR/ROSMRI87A04H501K/TXT/Causale",
+                iban = "IT0000000000000000000000000",
+                category = "9/0101100SP/")
 
-        val debtor = DebtorDto(
-            type = DebtorDto.Type.F,
-            fiscalCode = "ROSMRI87A04H501K",
-            fullName = "Mario Rossi"
-        )
+        val debtor =
+            DebtorDto(
+                type = DebtorDto.Type.F, fiscalCode = "ROSMRI87A04H501K", fullName = "Mario Rossi")
 
-        val installment = InstallmentDetailDto(
-            transferList = listOf(transferItem),
-            iuv = "020001000000123456",
-            description = "Test Payment Description",
-            dueDate = OffsetDateTime.now()
-        )
+        val installment =
+            InstallmentDetailDto(
+                transferList = listOf(transferItem),
+                iuv = "020001000000123456",
+                description = "Test Payment Description",
+                dueDate = OffsetDateTime.now())
 
-        val paymentOption = PaymentOptionDto(
-            installment = installment
-        )
+        val paymentOption = PaymentOptionDto(installment = installment)
 
         return DebtPositionRequestDto(
             companyName = "Comune di Fantasia",
@@ -56,8 +52,7 @@ class DebtPositionsControllerTest {
             officeName = "Ufficio Anagrafe",
             switchToExpired = false,
             debtor = debtor,
-            paymentOption = paymentOption
-        )
+            paymentOption = paymentOption)
     }
 
     @Test
@@ -75,12 +70,14 @@ class DebtPositionsControllerTest {
         val correlationId = UUID.randomUUID()
         val requestDto = buildSampleDebtPositionRequestDto()
 
-        webTestClient.post()
+        webTestClient
+            .post()
             .uri("/debt-positions")
             .header("x-correlation-id", correlationId.toString())
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(requestDto)
             .exchange()
-            .expectStatus().is5xxServerError
+            .expectStatus()
+            .is5xxServerError
     }
 }
