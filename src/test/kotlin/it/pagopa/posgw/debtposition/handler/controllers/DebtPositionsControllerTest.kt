@@ -66,6 +66,16 @@ class DebtPositionsControllerTest {
     }
 
     @Test
+    fun `invalidateDebtPosition direct call throws NotImplementedError`() = runTest {
+        val correlationId = UUID.randomUUID()
+        val iupd = "IUPD-2024-XYZ-001"
+
+        assertThrows<NotImplementedError> {
+            controller.invalidateDebtPosition(correlationId, iupd)
+        }
+    }
+
+    @Test
     fun `POST createDebtPosition endpoint returns 500 when TODO is executed`() {
         val correlationId = UUID.randomUUID()
         val requestDto = buildSampleDebtPositionRequestDto()
