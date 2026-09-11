@@ -60,6 +60,13 @@ paths:
                 $ref: '#/components/schemas/ProblemJson'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+              example:
+                status: 401
+                detail: Unauthorized
         '404':
           description: Not found
           content:
@@ -131,6 +138,13 @@ paths:
                 $ref: '#/components/schemas/ProblemJson'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemJson'
+              example:
+                status: 401
+                detail: Unauthorized
         '404':
           description: Not found
           content:
