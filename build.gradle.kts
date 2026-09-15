@@ -131,47 +131,47 @@ graalvmNative {
   }
 }
 
-// tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>(
-//  "debtposition-handler"
-// ) {
-//  description = "Generate debtposition-handler API client"
-//  group = "openapi-generation"
-//  generatorName.set("kotlin-spring")
-//  inputSpec.set("$rootDir/api-spec/debtposition-handler-api.yaml")
-//  outputDir.set(layout.buildDirectory.get().dir("generated").asFile.toString())
-//  apiPackage.set("it.pagopa.generated.posgw.debtposition.handler.api")
-//  modelPackage.set("it.pagopa.generated.posgw.debtposition.handler.model")
-//  generateApiDocumentation.set(false)
-//  generateApiTests.set(false)
-//  generateModelTests.set(false)
-//  library.set("spring-boot")
-//  modelNameSuffix.set("Dto")
-//  configOptions.set(
-//    mapOf(
-//      "annotationLibrary" to "swagger2",
-//      "openApiNullable" to "true",
-//      "interfaceOnly" to "true",
-//      "hideGenerationTimestamp" to "true",
-//      "skipDefaultInterface" to "true",
-//      "useSwaggerUI" to "false",
-//      "reactive" to "true",
-//      "useSpringBoot3" to "true",
-//      "oas3" to "true",
-//      "generateSupportingFiles" to "true",
-//      "enumPropertyNaming" to "UPPERCASE",
-//    )
-//  )
-// }
-//
-// sourceSets {
-//  named("main") {
-//    kotlin.srcDir(layout.buildDirectory.dir("generated/src/main/kotlin"))
-//  }
-// }
-//
-// tasks.named("compileKotlin") {
-//  dependsOn("debtposition-handler")
-// }
+tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>(
+  "debtposition-handler"
+) {
+  description = "Generate debtposition-handler API client"
+  group = "openapi-generation"
+  generatorName.set("kotlin-spring")
+  inputSpec.set("$rootDir/api-spec/debtposition-handler-api.yaml")
+  outputDir.set(layout.buildDirectory.get().dir("generated").asFile.toString())
+  apiPackage.set("it.pagopa.generated.posgw.debtposition.handler.api")
+  modelPackage.set("it.pagopa.generated.posgw.debtposition.handler.model")
+  generateApiDocumentation.set(false)
+  generateApiTests.set(false)
+  generateModelTests.set(false)
+  library.set("spring-boot")
+  modelNameSuffix.set("Dto")
+  configOptions.set(
+    mapOf(
+      "annotationLibrary" to "swagger2",
+      "openApiNullable" to "true",
+      "interfaceOnly" to "true",
+      "hideGenerationTimestamp" to "true",
+      "skipDefaultInterface" to "true",
+      "useSwaggerUI" to "false",
+      "reactive" to "true",
+      "useSpringBoot3" to "true",
+      "oas3" to "true",
+      "generateSupportingFiles" to "true",
+      "enumPropertyNaming" to "UPPERCASE",
+    )
+  )
+}
+
+sourceSets {
+  named("main") {
+    kotlin.srcDir(layout.buildDirectory.dir("generated/src/main/kotlin"))
+  }
+}
+
+tasks.named("compileKotlin") {
+  dependsOn("debtposition-handler")
+}
 
 /**
  * Task used to expand application properties with build specific properties such as artifact name

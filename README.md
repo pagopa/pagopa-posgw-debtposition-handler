@@ -9,7 +9,8 @@ PagoPA microservice that handles debt positions' lifecycle for pos-gateway domai
 
 ## Api Documentation 📖
 
-TODO 
+See
+the [OpenAPI 3 here.](https://editor.swagger.io/?url=https://raw.githubusercontent.com/pagopa/pagopa-posgw-debtposition-handler/main/api-spec/debtposition-handler-api.yaml)
 
 ---
 
