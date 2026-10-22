@@ -45,7 +45,7 @@ object Deps {
 }
 
 // posgw-common library version
-val posgwCommonVersion = "0.0.10"
+val posgwCommonVersion = "1.0.0"
 
 dependencies {
   // Open telemetry instrumentation
