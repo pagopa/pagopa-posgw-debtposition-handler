@@ -1,4 +1,5 @@
 import com.diffplug.spotless.kotlin.KtfmtStep
+import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
   kotlin("jvm") version "2.3.21"
@@ -8,7 +9,7 @@ plugins {
   id("org.graalvm.buildtools.native") version "1.1.1"
   id("com.diffplug.spotless") version "8.9.0"
   id("com.dipien.semantic-version") version "2.0.0" apply false
-  id("org.openapi.generator") version "7.25.0"
+  id("org.openapi.generator") version "7.27.0"
   id("org.sonarqube") version "7.5.0.8588"
   jacoco
 }
@@ -178,14 +179,50 @@ tasks.register<org.openapitools.generator.gradle.plugin.tasks.GenerateTask>(
   )
 }
 
+tasks.register<GenerateTask>("GPD-api") {
+  description = "Generate GPD API client for POS"
+  group = "openapi-generation"
+  generatorName.set("java")
+  remoteInputSpec.set(
+    "https://raw.githubusercontent.com/pagopa/pagopa-debt-position/refs/tags/1.3.0-1-PIDM-2601-otel-migration/openapi/openapi_pos_v3.json"
+  )
+  outputDir.set(layout.buildDirectory.get().dir("generated").asFile.toString())
+  invokerPackage.set("it.pagopa.generated.posgw.gpd.client")
+  apiPackage.set("it.pagopa.generated.posgw.gpd.api")
+  modelPackage.set("it.pagopa.generated.posgw.gpd.model")
+  generateApiDocumentation.set(false)
+  generateApiTests.set(false)
+  generateModelTests.set(false)
+  generateModelDocumentation.set(false)
+  library.set("webclient")
+  modelNameSuffix.set("Dto")
+  configOptions.set(
+    mapOf(
+      "useSpringBoot4" to "true",
+      "useJackson3" to "true",
+      "openApiNullable" to "false",
+      "useJakartaEe" to "true",
+      "dateLibrary" to "java8",
+      "reactive" to "true",
+      "hideGenerationTimestamp" to "true",
+      "enumPropertyNaming" to "MACRO_CASE",
+    )
+  )
+}
+
 sourceSets {
   named("main") {
     kotlin.srcDir(layout.buildDirectory.dir("generated/src/main/kotlin"))
+    java.srcDir(layout.buildDirectory.dir("generated/src/main/java"))
   }
 }
 
 tasks.named("compileKotlin") {
-  dependsOn("debtposition-handler")
+  dependsOn("debtposition-handler", "GPD-api")
+}
+
+tasks.named("compileJava") {
+  dependsOn("GPD-api")
 }
 
 /**
