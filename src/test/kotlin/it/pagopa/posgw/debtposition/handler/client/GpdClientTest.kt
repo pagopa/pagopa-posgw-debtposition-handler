@@ -83,7 +83,7 @@ class GpdClientTest {
                     "test-iupd", PaymentPositionModelV3Dto(), true, "test-request-id"))
             .expectErrorMatches {
                 it is GpdClientException &&
-                    it.toRestException().httpStatus == HttpStatus.BAD_REQUEST
+                    it.toRestException().httpStatusCode == HttpStatus.BAD_REQUEST
             }
             .verify()
 
@@ -99,7 +99,7 @@ class GpdClientTest {
                     "test-iupd", PaymentPositionModelV3Dto(), true, "test-request-id"))
             .expectErrorMatches {
                 it is GpdClientException &&
-                    it.toRestException().httpStatus == HttpStatus.INTERNAL_SERVER_ERROR
+                    it.toRestException().httpStatusCode == HttpStatus.INTERNAL_SERVER_ERROR
             }
             .verify()
     }
@@ -117,7 +117,7 @@ class GpdClientTest {
                 gpdClient.invalidateDebtPosition("test-fiscalcode", "test-iupd", "test-request-id"))
             .expectErrorMatches {
                 it is GpdClientException &&
-                    it.toRestException().httpStatus == HttpStatus.BAD_REQUEST
+                    it.toRestException().httpStatusCode == HttpStatus.BAD_REQUEST
             }
             .verify()
 
@@ -132,7 +132,7 @@ class GpdClientTest {
                 gpdClient.invalidateDebtPosition("test-fiscalcode", "test-iupd", "test-request-id"))
             .expectErrorMatches {
                 it is GpdClientException &&
-                    it.toRestException().httpStatus == HttpStatus.INTERNAL_SERVER_ERROR
+                    it.toRestException().httpStatusCode == HttpStatus.INTERNAL_SERVER_ERROR
             }
             .verify()
     }

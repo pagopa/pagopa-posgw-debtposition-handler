@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatusCode
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import reactor.core.publisher.Mono
@@ -37,21 +38,18 @@ class GpdClient(
                 organizationFiscalCode, paymentPositionModelV3Dto, toPublish, xRequestId)
             .doOnError { error ->
                 logger.error(
-                    "Error creating debt position for organizationFiscalCode: $organizationFiscalCode, error: ${error.message}",
-                    error)
+                    "Error creating debt position for organizationFiscalCode: $organizationFiscalCode, error: ${error.message}")
             }
             .onErrorMap {
                 when (it) {
                     is WebClientResponseException -> {
-                        GpdClientException(
-                            description = it.message,
-                            httpStatus = HttpStatus.valueOf(it.statusCode.value()),
-                        )
+                        GpdClientException(description = it.message, httpStatusCode = it.statusCode)
                     }
                     else -> {
                         GpdClientException(
                             description = "Unexpected error while invoking GPD",
-                            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
+                            httpStatusCode =
+                                HttpStatusCode.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()),
                         )
                     }
                 }
@@ -68,21 +66,18 @@ class GpdClient(
             .invalidatePosition(organizationFiscalCode, iupd, xRequestId)
             .doOnError { error ->
                 logger.error(
-                    "Error invalidating debt position for organizationFiscalCode: $organizationFiscalCode, iupd: $iupd, error: ${error.message}",
-                    error)
+                    "Error invalidating debt position for organizationFiscalCode: $organizationFiscalCode, iupd: $iupd, error: ${error.message}")
             }
             .onErrorMap {
                 when (it) {
                     is WebClientResponseException -> {
-                        GpdClientException(
-                            description = it.message,
-                            httpStatus = HttpStatus.valueOf(it.statusCode.value()),
-                        )
+                        GpdClientException(description = it.message, httpStatusCode = it.statusCode)
                     }
                     else -> {
                         GpdClientException(
                             description = "Unexpected error while invoking GPD",
-                            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
+                            httpStatusCode =
+                                HttpStatusCode.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()),
                         )
                     }
                 }

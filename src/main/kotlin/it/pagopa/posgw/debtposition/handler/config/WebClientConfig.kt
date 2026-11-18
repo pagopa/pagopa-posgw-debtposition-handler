@@ -31,7 +31,6 @@ class WebClientConfig {
             it.pagopa.generated.posgw.gpd.client.ApiClient.buildWebClientBuilder()
                 .clientConnector(ReactorClientHttpConnector(httpClient))
                 .defaultHeader("Ocp-Apim-Subscription-Key", config.apiKey)
-                .baseUrl(config.uri)
                 .build()
 
         val apiClient =
@@ -56,7 +55,6 @@ class WebClientConfig {
             it.pagopa.generated.posgw.gpd.client.ApiClient.buildWebClientBuilder()
                 .clientConnector(ReactorClientHttpConnector(httpClient))
                 .defaultHeader("Ocp-Apim-Subscription-Key", config.apiKey)
-                .baseUrl(config.uri)
                 .build()
 
         val apiClient =

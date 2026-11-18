@@ -85,7 +85,6 @@ microservice-chart:
     GPD_TIMEOUT: "1000"
     GPD_CONNECTION_TIMEOUT: "1000"
   envSecret:
-    TEST: test1
     GPD_API_KEY: gpd-api-key
   keyvault:
     name: "pagopa-d-itn-posgw-kv"
