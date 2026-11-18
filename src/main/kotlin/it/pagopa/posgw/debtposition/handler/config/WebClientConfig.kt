@@ -1,11 +1,11 @@
 package it.pagopa.posgw.debtposition.handler.config
 
 import io.netty.channel.ChannelOption
-import io.netty.handler.timeout.ReadTimeoutHandler
 import it.pagopa.generated.posgw.gpd.api.DebtPositionActionsApiApi
 import it.pagopa.generated.posgw.gpd.api.DebtPositionsApiInstallmentsAndPaymentOptionsManagerApi
+import it.pagopa.generated.posgw.gpd.client.ApiClient
 import it.pagopa.posgw.debtposition.handler.config.properties.GpdClientConfigProperties
-import java.util.concurrent.TimeUnit
+import java.time.Duration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
@@ -18,23 +18,9 @@ class WebClientConfig {
     fun gpdInvalidatePositionClient(
         config: GpdClientConfigProperties,
     ): DebtPositionActionsApiApi {
-        val httpClient =
-            HttpClient.create()
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.connectionTimeout)
-                .doOnConnected { connection ->
-                    connection.addHandlerLast(
-                        ReadTimeoutHandler(config.readTimeout.toLong(), TimeUnit.MILLISECONDS))
-                }
-                .resolver { it.ndots(1) }
 
-        val webClient =
-            it.pagopa.generated.posgw.gpd.client.ApiClient.buildWebClientBuilder()
-                .clientConnector(ReactorClientHttpConnector(httpClient))
-                .defaultHeader("Ocp-Apim-Subscription-Key", config.apiKey)
-                .build()
+        val apiClient = generateApiClient(config)
 
-        val apiClient =
-            it.pagopa.generated.posgw.gpd.client.ApiClient(webClient).setBasePath(config.uri)
         return DebtPositionActionsApiApi(apiClient)
     }
 
@@ -42,23 +28,25 @@ class WebClientConfig {
     fun gpdCreatePositionClient(
         config: GpdClientConfigProperties,
     ): DebtPositionsApiInstallmentsAndPaymentOptionsManagerApi {
+
+        val apiClient = generateApiClient(config)
+
+        return DebtPositionsApiInstallmentsAndPaymentOptionsManagerApi(apiClient)
+    }
+
+    fun generateApiClient(config: GpdClientConfigProperties): ApiClient {
         val httpClient =
             HttpClient.create()
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.connectionTimeout)
-                .doOnConnected { connection ->
-                    connection.addHandlerLast(
-                        ReadTimeoutHandler(config.readTimeout.toLong(), TimeUnit.MILLISECONDS))
-                }
+                .responseTimeout(Duration.ofMillis(config.readTimeout.toLong()))
                 .resolver { it.ndots(1) }
 
         val webClient =
-            it.pagopa.generated.posgw.gpd.client.ApiClient.buildWebClientBuilder()
+            ApiClient.buildWebClientBuilder()
                 .clientConnector(ReactorClientHttpConnector(httpClient))
                 .defaultHeader("Ocp-Apim-Subscription-Key", config.apiKey)
                 .build()
 
-        val apiClient =
-            it.pagopa.generated.posgw.gpd.client.ApiClient(webClient).setBasePath(config.uri)
-        return DebtPositionsApiInstallmentsAndPaymentOptionsManagerApi(apiClient)
+        return ApiClient(webClient).setBasePath(config.uri)
     }
 }

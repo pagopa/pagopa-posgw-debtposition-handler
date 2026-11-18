@@ -38,7 +38,8 @@ class GpdClient(
                 organizationFiscalCode, paymentPositionModelV3Dto, toPublish, xRequestId)
             .doOnError { error ->
                 logger.error(
-                    "Error creating debt position for organizationFiscalCode: $organizationFiscalCode, error: ${error.message}")
+                    "Error creating debt position for organizationFiscalCode: $organizationFiscalCode, error: ${error.message}",
+                    error)
             }
             .onErrorMap {
                 when (it) {
@@ -66,7 +67,8 @@ class GpdClient(
             .invalidatePosition(organizationFiscalCode, iupd, xRequestId)
             .doOnError { error ->
                 logger.error(
-                    "Error invalidating debt position for organizationFiscalCode: $organizationFiscalCode, iupd: $iupd, error: ${error.message}")
+                    "Error invalidating debt position for organizationFiscalCode: $organizationFiscalCode, iupd: $iupd, error: ${error.message}",
+                    error)
             }
             .onErrorMap {
                 when (it) {
