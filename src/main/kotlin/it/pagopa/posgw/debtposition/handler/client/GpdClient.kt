@@ -40,11 +40,21 @@ class GpdClient(
                     "Error creating debt position for organizationFiscalCode: $organizationFiscalCode, error: ${error.message}",
                     error)
             }
-            .onErrorMap(WebClientResponseException::class.java) { error ->
-                GpdClientException(
-                    description = error.message,
-                    httpStatus = HttpStatus.valueOf(error.statusCode.value()),
-                )
+            .onErrorMap {
+                when (it) {
+                    is WebClientResponseException -> {
+                        GpdClientException(
+                            description = it.message,
+                            httpStatus = HttpStatus.valueOf(it.statusCode.value()),
+                        )
+                    }
+                    else -> {
+                        GpdClientException(
+                            description = "Unexpected error while invoking GPD",
+                            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
+                        )
+                    }
+                }
             }
     }
 
@@ -61,11 +71,21 @@ class GpdClient(
                     "Error invalidating debt position for organizationFiscalCode: $organizationFiscalCode, iupd: $iupd, error: ${error.message}",
                     error)
             }
-            .onErrorMap(WebClientResponseException::class.java) { error ->
-                GpdClientException(
-                    description = error.message,
-                    httpStatus = HttpStatus.valueOf(error.statusCode.value()),
-                )
+            .onErrorMap {
+                when (it) {
+                    is WebClientResponseException -> {
+                        GpdClientException(
+                            description = it.message,
+                            httpStatus = HttpStatus.valueOf(it.statusCode.value()),
+                        )
+                    }
+                    else -> {
+                        GpdClientException(
+                            description = "Unexpected error while invoking GPD",
+                            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
+                        )
+                    }
+                }
             }
     }
 }
