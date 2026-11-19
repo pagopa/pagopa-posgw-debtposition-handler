@@ -9,6 +9,8 @@ import java.net.InetSocketAddress
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.test.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.ArgumentMatchers.any
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito.mock
@@ -69,72 +71,119 @@ class GpdClientTest {
             .verifyComplete()
     }
 
-    @Test
-    fun `Should handle error when creating a debt position`() {
+    private fun webClientError(status: Int) =
+        WebClientResponseException.create(
+            status, "GPD error", HttpHeaders.EMPTY, byteArrayOf(), null)
+
+    private fun createFailsWith(
+        error: Throwable
+    ): StepVerifier.FirstStep<PaymentPositionModelV3Dto> {
         given(gpdCreateClient.createPosition(any(), any(), any(), any()))
-            .willReturn(
-                Mono.error {
-                    WebClientResponseException.create(
-                        400, "Malformed request.", HttpHeaders.EMPTY, byteArrayOf(), null)
-                })
+            .willReturn(Mono.error(error))
+        return StepVerifier.create(
+            gpdClient.createDebtPosition(
+                "test-fiscalcode", PaymentPositionModelV3Dto(), true, "test-request-id"))
+    }
 
-        StepVerifier.create(
-                gpdClient.createDebtPosition(
-                    "test-iupd", PaymentPositionModelV3Dto(), true, "test-request-id"))
-            .expectErrorMatches {
+    private fun invalidateFailsWith(
+        error: Throwable
+    ): StepVerifier.FirstStep<PaymentPositionModelV3Dto> {
+        given(gpdInvalidateClient.invalidatePosition(any(), any(), any()))
+            .willReturn(Mono.error(error))
+        return StepVerifier.create(
+            gpdClient.invalidateDebtPosition("test-fiscalcode", "test-iupd", "test-request-id"))
+    }
+
+    private fun StepVerifier.FirstStep<PaymentPositionModelV3Dto>.expectGpdError(
+        status: HttpStatus,
+        description: String
+    ) {
+        expectErrorMatches {
                 it is GpdClientException &&
-                    it.toRestException().httpStatusCode == HttpStatus.BAD_REQUEST
-            }
-            .verify()
-
-        // Verify not handled exception case
-        given(gpdCreateClient.createPosition(any(), any(), any(), any()))
-            .willReturn(
-                Mono.error {
-                    RuntimeException("Unexpected error")
-                })
-
-        StepVerifier.create(
-                gpdClient.createDebtPosition(
-                    "test-iupd", PaymentPositionModelV3Dto(), true, "test-request-id"))
-            .expectErrorMatches {
-                it is GpdClientException &&
-                    it.toRestException().httpStatusCode == HttpStatus.INTERNAL_SERVER_ERROR
+                    it.toRestException().httpStatusCode == status &&
+                    it.toRestException().description == description
             }
             .verify()
     }
 
     @Test
-    fun `Should handle error when invalidating a debt position`() {
-        given(gpdInvalidateClient.invalidatePosition(any(), any(), any()))
-            .willReturn(
-                Mono.error {
-                    WebClientResponseException.create(
-                        400, "Malformed request.", HttpHeaders.EMPTY, byteArrayOf(), null)
-                })
+    fun `Should map 400 to bad request when creating a debt position`() {
+        createFailsWith(webClientError(400))
+            .expectGpdError(HttpStatus.BAD_REQUEST, "Malformed request")
+    }
 
-        StepVerifier.create(
-                gpdClient.invalidateDebtPosition("test-fiscalcode", "test-iupd", "test-request-id"))
-            .expectErrorMatches {
-                it is GpdClientException &&
-                    it.toRestException().httpStatusCode == HttpStatus.BAD_REQUEST
-            }
-            .verify()
+    @Test
+    fun `Should map 404 to not found when creating a debt position`() {
+        createFailsWith(webClientError(404))
+            .expectGpdError(HttpStatus.NOT_FOUND, "Debt position not found")
+    }
 
-        // Verify not handled exception case
-        given(gpdInvalidateClient.invalidatePosition(any(), any(), any()))
-            .willReturn(
-                Mono.error {
-                    RuntimeException("Unexpected error")
-                })
+    @Test
+    fun `Should map 409 to duplicate debt position when creating a debt position`() {
+        createFailsWith(webClientError(409))
+            .expectGpdError(HttpStatus.CONFLICT, "Duplicate debt position found.")
+    }
 
-        StepVerifier.create(
-                gpdClient.invalidateDebtPosition("test-fiscalcode", "test-iupd", "test-request-id"))
-            .expectErrorMatches {
-                it is GpdClientException &&
-                    it.toRestException().httpStatusCode == HttpStatus.INTERNAL_SERVER_ERROR
-            }
-            .verify()
+    @Test
+    fun `Should map 503 to service unavailable when creating a debt position`() {
+        createFailsWith(webClientError(503))
+            .expectGpdError(HttpStatus.SERVICE_UNAVAILABLE, "GPD service is unavailable")
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = [401, 422, 500, 504])
+    fun `Should map other GPD statuses to bad gateway when creating a debt position`(status: Int) {
+        createFailsWith(webClientError(status))
+            .expectGpdError(
+                HttpStatus.BAD_GATEWAY,
+                "Unexpected error from GPD service with status code ${HttpStatus.valueOf(status)}")
+    }
+
+    @Test
+    fun `Should map non HTTP errors to internal server error when creating a debt position`() {
+        createFailsWith(RuntimeException("Unexpected error"))
+            .expectGpdError(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error while invoking GPD")
+    }
+
+    @Test
+    fun `Should map 400 to bad request when invalidating a debt position`() {
+        invalidateFailsWith(webClientError(400))
+            .expectGpdError(HttpStatus.BAD_REQUEST, "Malformed request")
+    }
+
+    @Test
+    fun `Should map 404 to not found when invalidating a debt position`() {
+        invalidateFailsWith(webClientError(404))
+            .expectGpdError(HttpStatus.NOT_FOUND, "Debt position not found")
+    }
+
+    @Test
+    fun `Should map 409 to generic conflict when invalidating a debt position`() {
+        invalidateFailsWith(webClientError(409))
+            .expectGpdError(HttpStatus.CONFLICT, "Conflict error from GPD service")
+    }
+
+    @Test
+    fun `Should map 503 to service unavailable when invalidating a debt position`() {
+        invalidateFailsWith(webClientError(503))
+            .expectGpdError(HttpStatus.SERVICE_UNAVAILABLE, "GPD service is unavailable")
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = [401, 422, 500, 504])
+    fun `Should map other GPD statuses to bad gateway when invalidating a debt position`(
+        status: Int
+    ) {
+        invalidateFailsWith(webClientError(status))
+            .expectGpdError(
+                HttpStatus.BAD_GATEWAY,
+                "Unexpected error from GPD service with status code ${HttpStatus.valueOf(status)}")
+    }
+
+    @Test
+    fun `Should map non HTTP errors to internal server error when invalidating a debt position`() {
+        invalidateFailsWith(RuntimeException("Unexpected error"))
+            .expectGpdError(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error while invoking GPD")
     }
 
     @Test

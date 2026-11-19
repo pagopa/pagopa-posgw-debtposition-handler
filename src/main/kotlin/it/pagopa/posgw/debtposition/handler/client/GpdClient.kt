@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpStatus
-import org.springframework.http.HttpStatusCode
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import reactor.core.publisher.Mono
@@ -25,6 +24,13 @@ class GpdClient(
 ) {
     // TODO use logging OER
     val logger: Logger = LoggerFactory.getLogger(javaClass.name)
+
+    companion object {
+        enum class Operation {
+            CREATE_DEBT_POSITION,
+            INVALIDATE_DEBT_POSITION
+        }
+    }
 
     fun createDebtPosition(
         organizationFiscalCode: String,
@@ -42,18 +48,7 @@ class GpdClient(
                     error)
             }
             .onErrorMap {
-                when (it) {
-                    is WebClientResponseException -> {
-                        GpdClientException(description = it.message, httpStatusCode = it.statusCode)
-                    }
-                    else -> {
-                        GpdClientException(
-                            description = "Unexpected error while invoking GPD",
-                            httpStatusCode =
-                                HttpStatusCode.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()),
-                        )
-                    }
-                }
+                mapGpdError(it, Operation.CREATE_DEBT_POSITION)
             }
     }
 
@@ -71,18 +66,53 @@ class GpdClient(
                     error)
             }
             .onErrorMap {
-                when (it) {
-                    is WebClientResponseException -> {
-                        GpdClientException(description = it.message, httpStatusCode = it.statusCode)
+                mapGpdError(it, Operation.INVALIDATE_DEBT_POSITION)
+            }
+    }
+
+    fun mapGpdError(t: Throwable, operation: Operation): GpdClientException {
+        return when (t) {
+            is WebClientResponseException -> {
+                when (t.statusCode) {
+                    HttpStatus.BAD_REQUEST -> {
+                        GpdClientException(
+                            description = "Malformed request", httpStatusCode = t.statusCode)
+                    }
+                    HttpStatus.NOT_FOUND -> {
+                        GpdClientException(
+                            description = "Debt position not found", httpStatusCode = t.statusCode)
+                    }
+                    HttpStatus.CONFLICT -> {
+                        if (operation == Operation.CREATE_DEBT_POSITION) {
+                            GpdClientException(
+                                description = "Duplicate debt position found.",
+                                httpStatusCode = t.statusCode)
+                        } else {
+                            GpdClientException(
+                                description = "Conflict error from GPD service",
+                                httpStatusCode = t.statusCode)
+                        }
+                    }
+                    HttpStatus.SERVICE_UNAVAILABLE -> {
+                        GpdClientException(
+                            description = "GPD service is unavailable",
+                            httpStatusCode = t.statusCode)
                     }
                     else -> {
                         GpdClientException(
-                            description = "Unexpected error while invoking GPD",
-                            httpStatusCode =
-                                HttpStatusCode.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()),
+                            description =
+                                "Unexpected error from GPD service with status code ${t.statusCode}",
+                            httpStatusCode = HttpStatus.BAD_GATEWAY,
                         )
                     }
                 }
             }
+            else -> {
+                GpdClientException(
+                    description = "Unexpected error while invoking GPD",
+                    httpStatusCode = HttpStatus.INTERNAL_SERVER_ERROR,
+                )
+            }
+        }
     }
 }
