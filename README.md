@@ -49,6 +49,22 @@ If you want to start the application without too much hassle, you can just copy 
 cp .env.example .env
 ```
 
+If you want to customize the application environment, expand this table:
+
+<details>
+<summary> GPD environment variables </summary>
+
+| Variable name             | Description                                                                                                           | Type                 | default                     |
+|----------------------------|-----------------------------------------------------------------------------------------------------------------------|----------------------|-----------------------------|
+| `GPD_URI`                  | Base URL of the GPD service.                                                                                          | URL                  | `http://localhost:3002`     |
+| `GPD_TIMEOUT`              | Maximum response timeout for GPD requests, in milliseconds.                                                           | Positive integer     | `1000`                      |
+| `GPD_CONNECTION_TIMEOUT`   | Maximum time to establish a connection to GPD, in milliseconds.                                                       | Positive integer     | `1000`                      |
+| `GPD_API_KEY`              | Subscription key sent in the `Ocp-Apim-Subscription-Key` header; use a valid environment-specific secret.             | String (secret)      | `primary-key`               |
+
+These are example values from `.env.example`, not application defaults. The application requires all four variables to be set.
+
+</details>
+
 ### Build Docker Image
 ```sh
 export GITHUB_TOKEN=your_github_token_with_packages_read_permission
