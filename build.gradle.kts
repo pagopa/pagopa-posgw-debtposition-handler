@@ -184,7 +184,7 @@ tasks.register<GenerateTask>("GPD-api") {
   group = "openapi-generation"
   generatorName.set("java")
   remoteInputSpec.set(
-    "https://raw.githubusercontent.com/pagopa/pagopa-debt-position/refs/tags/1.3.0-1-PIDM-2601-otel-migration/openapi/openapi_pos_v3.json"
+    "https://raw.githubusercontent.com/pagopa/pagopa-debt-position/refs/tags/1.3.0-1/openapi/openapi_pos_v3.json"
   )
   outputDir.set(layout.buildDirectory.get().dir("generated").asFile.toString())
   invokerPackage.set("it.pagopa.generated.posgw.gpd.client")
