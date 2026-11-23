@@ -9,11 +9,13 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class DebtPositionsController : DebtPositionsApi {
+
     override suspend fun createDebtPosition(
         xCorrelationId: UUID,
         debtPositionRequestDto: DebtPositionRequestDto
     ): ResponseEntity<DebtPositionResponseDto> {
         TODO("Not yet implemented")
+        TODO("Add logs OER")
     }
 
     override suspend fun invalidateDebtPosition(
