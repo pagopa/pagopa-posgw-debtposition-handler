@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import org.springframework.web.reactive.function.client.WebClientRequestException
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import reactor.core.publisher.Mono
 
@@ -70,17 +71,48 @@ class GpdClient(
             }
     }
 
+    /**
+     * Maps an error raised while calling GPD to the [GpdClientException] returned to our caller.
+     *
+     * For errors with an HTTP status from GPD ([WebClientResponseException]):
+     * - 400: "Malformed request" (400) on create; on invalidate it is unexpected, so 502
+     * - 404: "Debt position not found" (404) on invalidate; on create it is unexpected, so 502
+     * - 409: "Duplicate debt position found." (409) on create, "Unexpected conflict error from GPD
+     *   service" (409) on invalidate
+     * - 503: "GPD service is unavailable" (503)
+     * - any other status: "Unexpected error from GPD service with status code ..." (502 Bad
+     *   Gateway)
+     *
+     * For errors where no HTTP response was received from GPD ([WebClientRequestException], for
+     * example a response or connect timeout, or a refused connection): "No response from GPD
+     * service" (504 Gateway Timeout).
+     *
+     * Any other error is mapped to a generic 500.
+     */
     fun mapGpdError(t: Throwable, operation: Operation): GpdClientException {
         return when (t) {
             is WebClientResponseException -> {
                 when (t.statusCode) {
                     HttpStatus.BAD_REQUEST -> {
-                        GpdClientException(
-                            description = "Malformed request", httpStatusCode = t.statusCode)
+                        if (operation == Operation.CREATE_DEBT_POSITION) {
+                            GpdClientException(
+                                description = "Malformed request", httpStatusCode = t.statusCode)
+                        } else {
+                            GpdClientException(
+                                description = "Unexpected error from GPD service",
+                                httpStatusCode = HttpStatus.BAD_GATEWAY)
+                        }
                     }
                     HttpStatus.NOT_FOUND -> {
-                        GpdClientException(
-                            description = "Debt position not found", httpStatusCode = t.statusCode)
+                        if (operation == Operation.INVALIDATE_DEBT_POSITION) {
+                            GpdClientException(
+                                description = "Debt position not found",
+                                httpStatusCode = t.statusCode)
+                        } else {
+                            GpdClientException(
+                                description = "Unexpected error from GPD service",
+                                httpStatusCode = HttpStatus.BAD_GATEWAY)
+                        }
                     }
                     HttpStatus.CONFLICT -> {
                         if (operation == Operation.CREATE_DEBT_POSITION) {
@@ -89,7 +121,7 @@ class GpdClient(
                                 httpStatusCode = t.statusCode)
                         } else {
                             GpdClientException(
-                                description = "Conflict error from GPD service",
+                                description = "Unexpected conflict error from GPD service",
                                 httpStatusCode = t.statusCode)
                         }
                     }
@@ -106,6 +138,12 @@ class GpdClient(
                         )
                     }
                 }
+            }
+            is WebClientRequestException -> {
+                GpdClientException(
+                    description = "No response from GPD service",
+                    httpStatusCode = HttpStatus.GATEWAY_TIMEOUT,
+                )
             }
             else -> {
                 GpdClientException(

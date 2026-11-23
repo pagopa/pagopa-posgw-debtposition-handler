@@ -1,11 +1,13 @@
 package it.pagopa.posgw.debtposition.handler.client
 
 import com.sun.net.httpserver.HttpServer
+import io.netty.handler.timeout.ReadTimeoutException
 import it.pagopa.generated.posgw.gpd.api.DebtPositionActionsApiApi
 import it.pagopa.generated.posgw.gpd.api.DebtPositionsApiInstallmentsAndPaymentOptionsManagerApi
 import it.pagopa.generated.posgw.gpd.model.PaymentPositionModelV3Dto
 import it.pagopa.posgw.debtposition.handler.exception.GpdClientException
 import java.net.InetSocketAddress
+import java.net.URI
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.test.assertEquals
 import org.junit.jupiter.api.Test
@@ -18,8 +20,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.TestPropertySource
+import org.springframework.web.reactive.function.client.WebClientRequestException
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
@@ -113,9 +117,9 @@ class GpdClientTest {
     }
 
     @Test
-    fun `Should map 404 to not found when creating a debt position`() {
+    fun `Should map 404 to bad gateway when creating a debt position`() {
         createFailsWith(webClientError(404))
-            .expectGpdError(HttpStatus.NOT_FOUND, "Debt position not found")
+            .expectGpdError(HttpStatus.BAD_GATEWAY, "Unexpected error from GPD service")
     }
 
     @Test
@@ -128,6 +132,17 @@ class GpdClientTest {
     fun `Should map 503 to service unavailable when creating a debt position`() {
         createFailsWith(webClientError(503))
             .expectGpdError(HttpStatus.SERVICE_UNAVAILABLE, "GPD service is unavailable")
+    }
+
+    @Test
+    fun `Should map no response to gateway timeout when creating a debt position`() {
+        createFailsWith(
+                WebClientRequestException(
+                    ReadTimeoutException.INSTANCE,
+                    HttpMethod.POST,
+                    URI.create("http://localhost:3002"),
+                    HttpHeaders.EMPTY))
+            .expectGpdError(HttpStatus.GATEWAY_TIMEOUT, "No response from GPD service")
     }
 
     @ParameterizedTest
@@ -146,9 +161,9 @@ class GpdClientTest {
     }
 
     @Test
-    fun `Should map 400 to bad request when invalidating a debt position`() {
+    fun `Should map 400 to bad gateway when invalidating a debt position`() {
         invalidateFailsWith(webClientError(400))
-            .expectGpdError(HttpStatus.BAD_REQUEST, "Malformed request")
+            .expectGpdError(HttpStatus.BAD_GATEWAY, "Unexpected error from GPD service")
     }
 
     @Test
@@ -160,13 +175,24 @@ class GpdClientTest {
     @Test
     fun `Should map 409 to generic conflict when invalidating a debt position`() {
         invalidateFailsWith(webClientError(409))
-            .expectGpdError(HttpStatus.CONFLICT, "Conflict error from GPD service")
+            .expectGpdError(HttpStatus.CONFLICT, "Unexpected conflict error from GPD service")
     }
 
     @Test
     fun `Should map 503 to service unavailable when invalidating a debt position`() {
         invalidateFailsWith(webClientError(503))
             .expectGpdError(HttpStatus.SERVICE_UNAVAILABLE, "GPD service is unavailable")
+    }
+
+    @Test
+    fun `Should map no response to gateway timeout when invalidating a debt position`() {
+        invalidateFailsWith(
+                WebClientRequestException(
+                    ReadTimeoutException.INSTANCE,
+                    HttpMethod.POST,
+                    URI.create("http://localhost:3002"),
+                    HttpHeaders.EMPTY))
+            .expectGpdError(HttpStatus.GATEWAY_TIMEOUT, "No response from GPD service")
     }
 
     @ParameterizedTest
@@ -184,6 +210,20 @@ class GpdClientTest {
     fun `Should map non HTTP errors to internal server error when invalidating a debt position`() {
         invalidateFailsWith(RuntimeException("Unexpected error"))
             .expectGpdError(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error while invoking GPD")
+    }
+
+    @Test
+    fun `Should map a refused connection to gateway timeout`() {
+        // no server is listening on the configured GPD port
+        val realClient = GpdClient(realGpdInvalidateClient, realGpdCreateClient)
+
+        StepVerifier.create(
+                realClient.invalidateDebtPosition("test-fiscalcode", "test-iupd", "request-id"))
+            .expectErrorMatches {
+                it is GpdClientException &&
+                    it.toRestException().httpStatusCode == HttpStatus.GATEWAY_TIMEOUT
+            }
+            .verify()
     }
 
     @Test
