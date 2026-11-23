@@ -46,7 +46,7 @@ object Deps {
 }
 
 // posgw-common library version
-val posgwCommonVersion = "1.1.0"
+val posgwCommonVersion = "1.2.0"
 
 dependencies {
   // Open telemetry instrumentation
@@ -59,6 +59,7 @@ dependencies {
 
   implementation("org.springframework.boot:spring-boot-starter-actuator")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
+  implementation("org.springframework.boot:spring-boot-starter-webclient")
   implementation("org.springframework.boot:spring-boot-starter-validation")
   implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
   implementation("org.jetbrains.kotlin:kotlin-reflect")

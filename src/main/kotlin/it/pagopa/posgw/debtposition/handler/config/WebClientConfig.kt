@@ -9,6 +9,7 @@ import java.time.Duration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.client.reactive.ReactorClientHttpConnector
+import org.springframework.web.reactive.function.client.WebClient
 import reactor.netty.http.client.HttpClient
 
 @Configuration
@@ -16,25 +17,16 @@ class WebClientConfig {
 
     @Bean(name = ["gpdInvalidatePositionWebClient"])
     fun gpdInvalidatePositionClient(
-        config: GpdClientConfigProperties,
-    ): DebtPositionActionsApiApi {
-
-        val apiClient = generateApiClient(config)
-
-        return DebtPositionActionsApiApi(apiClient)
-    }
+        apiClient: ApiClient,
+    ) = DebtPositionActionsApiApi(apiClient)
 
     @Bean(name = ["gpdCreatePositionWebClient"])
     fun gpdCreatePositionClient(
-        config: GpdClientConfigProperties,
-    ): DebtPositionsApiInstallmentsAndPaymentOptionsManagerApi {
+        apiClient: ApiClient,
+    ) = DebtPositionsApiInstallmentsAndPaymentOptionsManagerApi(apiClient)
 
-        val apiClient = generateApiClient(config)
-
-        return DebtPositionsApiInstallmentsAndPaymentOptionsManagerApi(apiClient)
-    }
-
-    fun generateApiClient(config: GpdClientConfigProperties): ApiClient {
+    @Bean
+    fun gpdApiClient(builder: WebClient.Builder, config: GpdClientConfigProperties): ApiClient {
         val httpClient =
             HttpClient.create()
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.connectionTimeout)
@@ -42,7 +34,7 @@ class WebClientConfig {
                 .resolver { it.ndots(1) }
 
         val webClient =
-            ApiClient.buildWebClientBuilder()
+            builder
                 .clientConnector(ReactorClientHttpConnector(httpClient))
                 .defaultHeader("Ocp-Apim-Subscription-Key", config.apiKey)
                 .build()
