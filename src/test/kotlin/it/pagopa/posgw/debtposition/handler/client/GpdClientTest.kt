@@ -5,6 +5,7 @@ import io.netty.handler.timeout.ReadTimeoutException
 import it.pagopa.generated.posgw.gpd.api.DebtPositionActionsApiApi
 import it.pagopa.generated.posgw.gpd.api.DebtPositionsApiInstallmentsAndPaymentOptionsManagerApi
 import it.pagopa.generated.posgw.gpd.model.PaymentPositionModelV3Dto
+import it.pagopa.posgw.debtposition.handler.client.GpdClient.Companion.Operation
 import it.pagopa.posgw.debtposition.handler.exception.GpdClientException
 import java.net.InetSocketAddress
 import java.net.URI
@@ -110,110 +111,108 @@ class GpdClientTest {
             .verify()
     }
 
-    @Test
-    fun `Should map 400 to bad request when creating a debt position`() {
-        createFailsWith(webClientError(400))
-            .expectGpdError(HttpStatus.BAD_REQUEST, "Malformed request")
+    @ParameterizedTest
+    @ValueSource(ints = [400, 404, 409, 422])
+    fun `Should map 4xx to conflict when creating a debt position`(status: Int) {
+        createFailsWith(webClientError(status))
+            .expectGpdError(
+                HttpStatus.CONFLICT,
+                "Client error while invoking GPD for operation ${Operation.CREATE_DEBT_POSITION} with status code ${HttpStatus.valueOf(status)}")
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = [401, 403])
+    fun `Should map 401 and 403 to internal server error when creating a debt position`(
+        status: Int
+    ) {
+        createFailsWith(webClientError(status))
+            .expectGpdError(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Error communicating with GPD for operation ${Operation.CREATE_DEBT_POSITION} with status code ${HttpStatus.valueOf(status)}")
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = [500, 502, 503, 504])
+    fun `Should map 5xx to bad gateway when creating a debt position`(status: Int) {
+        createFailsWith(webClientError(status))
+            .expectGpdError(
+                HttpStatus.BAD_GATEWAY,
+                "Unexpected error while invoking GPD for operation ${Operation.CREATE_DEBT_POSITION} with status code ${HttpStatus.valueOf(status)}")
     }
 
     @Test
-    fun `Should map 404 to bad gateway when creating a debt position`() {
-        createFailsWith(webClientError(404))
-            .expectGpdError(HttpStatus.BAD_GATEWAY, "Unexpected error from GPD service")
+    fun `Should map non HTTP errors to bad gateway when creating a debt position`() {
+        createFailsWith(RuntimeException("Unexpected error"))
+            .expectGpdError(
+                HttpStatus.BAD_GATEWAY,
+                "Unexpected error while invoking GPD for operation ${Operation.CREATE_DEBT_POSITION}")
     }
 
     @Test
-    fun `Should map 409 to duplicate debt position when creating a debt position`() {
-        createFailsWith(webClientError(409))
-            .expectGpdError(HttpStatus.CONFLICT, "Duplicate debt position found.")
-    }
-
-    @Test
-    fun `Should map 503 to service unavailable when creating a debt position`() {
-        createFailsWith(webClientError(503))
-            .expectGpdError(HttpStatus.SERVICE_UNAVAILABLE, "GPD service is unavailable")
-    }
-
-    @Test
-    fun `Should map no response to gateway timeout when creating a debt position`() {
+    fun `Should map request errors without response to bad gateway when creating a debt position`() {
         createFailsWith(
                 WebClientRequestException(
                     ReadTimeoutException.INSTANCE,
                     HttpMethod.POST,
                     URI.create("http://localhost:3002"),
                     HttpHeaders.EMPTY))
-            .expectGpdError(HttpStatus.GATEWAY_TIMEOUT, "No response from GPD service")
+            .expectGpdError(
+                HttpStatus.BAD_GATEWAY,
+                "Unexpected error while invoking GPD for operation ${Operation.CREATE_DEBT_POSITION}")
     }
 
     @ParameterizedTest
-    @ValueSource(ints = [401, 422, 500, 504])
-    fun `Should map other GPD statuses to bad gateway when creating a debt position`(status: Int) {
-        createFailsWith(webClientError(status))
+    @ValueSource(ints = [400, 404, 409, 422])
+    fun `Should map 4xx to conflict when invalidating a debt position`(status: Int) {
+        invalidateFailsWith(webClientError(status))
+            .expectGpdError(
+                HttpStatus.CONFLICT,
+                "Client error while invoking GPD for operation ${Operation.INVALIDATE_DEBT_POSITION} with status code ${HttpStatus.valueOf(status)}")
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = [401, 403])
+    fun `Should map 401 and 403 to internal server error when invalidating a debt position`(
+        status: Int
+    ) {
+        invalidateFailsWith(webClientError(status))
+            .expectGpdError(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Error communicating with GPD for operation ${Operation.INVALIDATE_DEBT_POSITION} with status code ${HttpStatus.valueOf(status)}")
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = [500, 502, 503, 504])
+    fun `Should map 5xx to bad gateway when invalidating a debt position`(status: Int) {
+        invalidateFailsWith(webClientError(status))
             .expectGpdError(
                 HttpStatus.BAD_GATEWAY,
-                "Unexpected error from GPD service with status code ${HttpStatus.valueOf(status)}")
+                "Unexpected error while invoking GPD for operation ${Operation.INVALIDATE_DEBT_POSITION} with status code ${HttpStatus.valueOf(status)}")
     }
 
     @Test
-    fun `Should map non HTTP errors to internal server error when creating a debt position`() {
-        createFailsWith(RuntimeException("Unexpected error"))
-            .expectGpdError(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error while invoking GPD")
+    fun `Should map non HTTP errors to bad gateway when invalidating a debt position`() {
+        invalidateFailsWith(RuntimeException("Unexpected error"))
+            .expectGpdError(
+                HttpStatus.BAD_GATEWAY,
+                "Unexpected error while invoking GPD for operation ${Operation.INVALIDATE_DEBT_POSITION}")
     }
 
     @Test
-    fun `Should map 400 to bad gateway when invalidating a debt position`() {
-        invalidateFailsWith(webClientError(400))
-            .expectGpdError(HttpStatus.BAD_GATEWAY, "Unexpected error from GPD service")
-    }
-
-    @Test
-    fun `Should map 404 to not found when invalidating a debt position`() {
-        invalidateFailsWith(webClientError(404))
-            .expectGpdError(HttpStatus.NOT_FOUND, "Debt position not found")
-    }
-
-    @Test
-    fun `Should map 409 to generic conflict when invalidating a debt position`() {
-        invalidateFailsWith(webClientError(409))
-            .expectGpdError(HttpStatus.CONFLICT, "Unexpected conflict error from GPD service")
-    }
-
-    @Test
-    fun `Should map 503 to service unavailable when invalidating a debt position`() {
-        invalidateFailsWith(webClientError(503))
-            .expectGpdError(HttpStatus.SERVICE_UNAVAILABLE, "GPD service is unavailable")
-    }
-
-    @Test
-    fun `Should map no response to gateway timeout when invalidating a debt position`() {
+    fun `Should map request errors without response to bad gateway when invalidating a debt position`() {
         invalidateFailsWith(
                 WebClientRequestException(
                     ReadTimeoutException.INSTANCE,
                     HttpMethod.POST,
                     URI.create("http://localhost:3002"),
                     HttpHeaders.EMPTY))
-            .expectGpdError(HttpStatus.GATEWAY_TIMEOUT, "No response from GPD service")
-    }
-
-    @ParameterizedTest
-    @ValueSource(ints = [401, 422, 500, 504])
-    fun `Should map other GPD statuses to bad gateway when invalidating a debt position`(
-        status: Int
-    ) {
-        invalidateFailsWith(webClientError(status))
             .expectGpdError(
                 HttpStatus.BAD_GATEWAY,
-                "Unexpected error from GPD service with status code ${HttpStatus.valueOf(status)}")
+                "Unexpected error while invoking GPD for operation ${Operation.INVALIDATE_DEBT_POSITION}")
     }
 
     @Test
-    fun `Should map non HTTP errors to internal server error when invalidating a debt position`() {
-        invalidateFailsWith(RuntimeException("Unexpected error"))
-            .expectGpdError(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error while invoking GPD")
-    }
-
-    @Test
-    fun `Should map a refused connection to gateway timeout`() {
+    fun `Should map a refused connection to bad gateway`() {
         // no server is listening on the configured GPD port
         val realClient = GpdClient(realGpdInvalidateClient, realGpdCreateClient)
 
@@ -221,7 +220,7 @@ class GpdClientTest {
                 realClient.invalidateDebtPosition("test-fiscalcode", "test-iupd", "request-id"))
             .expectErrorMatches {
                 it is GpdClientException &&
-                    it.toRestException().httpStatusCode == HttpStatus.GATEWAY_TIMEOUT
+                    it.toRestException().httpStatusCode == HttpStatus.BAD_GATEWAY
             }
             .verify()
     }

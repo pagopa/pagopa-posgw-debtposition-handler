@@ -43,6 +43,7 @@ object Deps {
   const val SWAGGER_ANNOTATIONS_VERSION = "2.2.31"
   const val JACKSON_DATABIND_NULLABLE_VERSION = "0.2.6"
   const val OTEL_INSTRUMENTATION_VERSION = "2.28.0"
+  const val MICROMETER_CONTEXT_PROPAGATION_VERSION = "1.2.1"
 }
 
 // posgw-common library version
@@ -77,6 +78,9 @@ dependencies {
 
   // posgw-common library
   implementation("it.pagopa:pagopa-posgw-common:${posgwCommonVersion}")
+
+  // Source: https://mvnrepository.com/artifact/io.micrometer/context-propagation
+  implementation("io.micrometer:context-propagation:${Deps.MICROMETER_CONTEXT_PROPAGATION_VERSION}")
 
   testImplementation("org.springframework.boot:spring-boot-starter-actuator-test")
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
