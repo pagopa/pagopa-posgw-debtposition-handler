@@ -1,0 +1,167 @@
+{
+  "info": {
+    "_postman_id": "07e60833-ddf8-4007-bb2a-8d7362147ef1",
+    "name": "Pagopa Debt Position Handler API",
+    "description": "API's that will be used for pagoPA POS flow integration\n\nContact Support:\n Name: pagoPA - Touchpoints team",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "58114951",
+    "_collection_link": "https://go.postman.co/collection/58114951-07e60833-ddf8-4007-bb2a-8d7362147ef1?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Create a new debt position",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.environment.set(\"IUPD\", `POSGW-INTEGRATION-TEST-${getId(5)}`);\npm.environment.set(\"IUV\", `95000${getId(12)}`);\n\nfunction getId(size) {\n  return Math.floor(Math.random() * (10 ** size)).toString().padStart(size, '0');\n}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"[pagopa-posgw-debtposition-handler] Create a new debt position\", () => {\n    pm.response.to.have.status(200);\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "apikey",
+          "apikey": [
+            {
+              "key": "value",
+              "value": "{{apiKey}}",
+              "type": "string"
+            },
+            {
+              "key": "in",
+              "value": "header",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-correlation-id",
+            "value": "04714f49-d79d-4fe0-bbb3-2fd43afc2af4",
+            "description": "Subsequent api call correlation field. This should be the same for all api's invoked in a given user session to track each call and for troubleshooting"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"companyName\": \"Ente Creditore Test\",\n  \"iupd\": \"{{IUPD}}\",\n  \"officeName\": \"Sportello POS\",\n  \"switchToExpired\": false,\n  \"debtor\": {\n    \"type\": \"G\",\n    \"fiscalCode\": \"ROSMRI87A04H501K\",\n    \"fullName\": \"Mario Rossi\"\n  },\n  \"paymentOption\": {\n    \"installment\": {\n      \"transferList\": [\n        {\n          \"amount\": {{AMOUNT}},\n          \"remittanceInformation\": \"/RFB/{{IUV}}/CNR/ROSMRI87A04H501K/TXT/POSGW Integration Test {{IUPD}}\",\n          \"iban\": \"IT60X0542811101000000123456\",\n          \"category\": \"9/0101108TS/\"\n        }\n      ],\n      \"iuv\": \"{{IUV}}\",\n      \"description\": \"POSGW Integration Test {{IUPD}}\",\n      \"dueDate\": \"2024-12-31T23:59:59Z\",\n      \"installmentMetadata\": {\n        \"channel\": \"POS\"\n      }\n    }\n  }\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{HOSTNAME}}/{{BASE_PATH}}/debt-positions/{{ORG_FISCAL_CODE}}",
+          "host": [
+            "{{HOSTNAME}}"
+          ],
+        "path": [
+            "{{BASE_PATH}}",
+            "debt-positions",
+            "{{ORG_FISCAL_CODE}}"
+          ]
+        },
+        "description": "Trigger a position creation invoking external service"
+      },
+      "response": []
+    },
+    {
+      "name": "Invalidate a debt position",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"[pagopa-posgw-debtposition-handler] Invalidate a debt position\", () => {\n    pm.response.to.have.status(204);\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "apikey",
+          "apikey": [
+            {
+              "key": "value",
+              "value": "{{apiKey}}",
+              "type": "string"
+            },
+            {
+              "key": "in",
+              "value": "header",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-correlation-id",
+            "value": "04714f49-d79d-4fe0-bbb3-2fd43afc2af4",
+            "description": "Subsequent api call correlation field. This should be the same for all api's invoked in a given user session to track each call and for troubleshooting"
+          },
+          {
+            "key": "x-org-fiscal-code",
+            "value": "31293847112"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{HOSTNAME}}/{{BASE_PATH}}/debt-positions/{{ORG_FISCAL_CODE}}/{{IUPD}}/invalidations",
+          "host": [
+            "{{HOSTNAME}}"
+          ],
+          "path": [
+            "{{BASE_PATH}}",
+            "debt-positions",
+            "{{ORG_FISCAL_CODE}}",
+            "{{IUPD}}",
+            "invalidations"
+          ]
+        },
+        "description": "Trigger a position invalidation invoking external service"
+      },
+      "response": []
+    }
+  ],
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "value",
+        "value": "{{apiKey}}",
+        "type": "string"
+      },
+      {
+        "key": "in",
+        "value": "header",
+        "type": "string"
+      }
+    ]
+  }
+}
