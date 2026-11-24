@@ -11,6 +11,9 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.server.ResponseStatusException
+import org.springframework.web.server.ServerWebInputException
+import org.springframework.web.server.UnsupportedMediaTypeStatusException
 
 /**
  * Exception handler used to output a custom message in case an incoming request is invalid or an
@@ -63,6 +66,27 @@ class ExceptionHandler {
             HttpStatus.INTERNAL_SERVER_ERROR.value(),
             HttpStatus.INTERNAL_SERVER_ERROR.reasonPhrase,
             "Unexpected error while processing the request")
+    }
+
+    /**
+     * Formally invalid input (malformed body, failed validation, missing or mistyped parameters or
+     * headers, unsupported content type). The API specification declares 400 for all of them.
+     */
+    @ExceptionHandler(ServerWebInputException::class, UnsupportedMediaTypeStatusException::class)
+    fun handleRequestValidationException(
+        e: ResponseStatusException,
+    ): ResponseEntity<ProblemJsonDto> {
+        LogTracingUtils.loggerTracingUtils()
+            .failure()
+            .logWithStackTrace(
+                logger,
+                e,
+                "Input request is not valid",
+            )
+        return problem(
+            HttpStatus.BAD_REQUEST.value(),
+            HttpStatus.BAD_REQUEST.reasonPhrase,
+            "Input request is not valid")
     }
 
     private fun logFailure(e: Exception) {
