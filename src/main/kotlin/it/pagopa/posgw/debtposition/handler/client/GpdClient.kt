@@ -42,24 +42,23 @@ class GpdClient(
         return gpdCreateClient
             .createPosition(
                 organizationFiscalCode, paymentPositionModelV3Dto, toPublish, xRequestId)
-            .doOnError { error ->
+            .onErrorMap {
+                mapGpdError(it, Operation.CREATE_DEBT_POSITION, organizationFiscalCode)
+            }
+            .doOnSuccess {
                 LogTracingUtils.loggerTracingUtils()
                     .dependency(LogTracingUtils.GPD_DEPENDENCY)
                     .details(
                         mapOf(
                             "organization_fiscal_code" to organizationFiscalCode,
                             "to_publish" to toPublish.toString(),
-                            "operation" to Operation.CREATE_DEBT_POSITION.name,
                         ))
-                    .failure()
-                    .logWithStackTrace(
-                        logger,
-                        error,
-                        "Error creating debt position for organizationFiscalCode",
-                    )
-            }
-            .onErrorMap {
-                mapGpdError(it, Operation.CREATE_DEBT_POSITION)
+                    .attributes(
+                        mapOf(
+                            LogTracingUtils.Companion.AttributeKeys.EVENT_ACTION to
+                                Operation.CREATE_DEBT_POSITION.name))
+                    .success()
+                    .logInfo(logger, "Debt position created successfully")
             }
     }
 
@@ -71,24 +70,22 @@ class GpdClient(
 
         return gpdInvalidateClient
             .invalidatePosition(organizationFiscalCode, iupd, xRequestId)
-            .doOnError { error ->
+            .onErrorMap {
+                mapGpdError(it, Operation.INVALIDATE_DEBT_POSITION, organizationFiscalCode)
+            }
+            .doOnSuccess {
                 LogTracingUtils.loggerTracingUtils()
                     .dependency(LogTracingUtils.GPD_DEPENDENCY)
                     .details(
                         mapOf(
                             "organization_fiscal_code" to organizationFiscalCode,
-                            "iupd" to iupd,
-                            "operation" to Operation.INVALIDATE_DEBT_POSITION.name,
                         ))
-                    .failure()
-                    .logWithStackTrace(
-                        logger,
-                        error,
-                        "Error invalidating debt position",
-                    )
-            }
-            .onErrorMap {
-                mapGpdError(it, Operation.INVALIDATE_DEBT_POSITION)
+                    .attributes(
+                        mapOf(
+                            LogTracingUtils.Companion.AttributeKeys.EVENT_ACTION to
+                                Operation.INVALIDATE_DEBT_POSITION.name))
+                    .success()
+                    .logInfo(logger, "Debt position invalidated successfully")
             }
     }
 
@@ -102,7 +99,11 @@ class GpdClient(
      * Errors that are not [WebClientResponseException]s have no HTTP response status and are mapped
      * to 502 Bad Gateway. The [operation] is included in the error description for context.
      */
-    fun mapGpdError(t: Throwable, operation: Operation): GpdClientException {
+    fun mapGpdError(
+        t: Throwable,
+        operation: Operation,
+        organizationFiscalCode: String
+    ): GpdClientException {
         return when (t) {
             is WebClientResponseException -> {
                 when {
@@ -112,22 +113,27 @@ class GpdClient(
                         // client
                         GpdClientException(
                             description =
-                                "Error communicating with GPD for operation $operation with status code ${t.statusCode}",
-                            httpStatusCode = HttpStatus.INTERNAL_SERVER_ERROR)
+                                "Error communicating with GPD for operation $operation with status code from GPD ${t.statusCode}",
+                            httpStatusCode = HttpStatus.INTERNAL_SERVER_ERROR,
+                            operation = operation.name,
+                            organizationFiscalCode = organizationFiscalCode)
                     }
                     t.statusCode.is4xxClientError -> {
                         GpdClientException(
                             description =
-                                "Client error while invoking GPD for operation $operation with status code ${t.statusCode}",
-                            httpStatusCode = HttpStatus.CONFLICT)
+                                "Client error while invoking GPD for operation $operation with status code from GPD ${t.statusCode}",
+                            httpStatusCode = HttpStatus.CONFLICT,
+                            operation = operation.name,
+                            organizationFiscalCode = organizationFiscalCode)
                     }
                     // 5xx and other errors
                     else -> {
                         GpdClientException(
                             description =
-                                "Unexpected error while invoking GPD for operation $operation with status code ${t.statusCode}",
+                                "Unexpected error while invoking GPD for operation $operation with status code from GPD ${t.statusCode}",
                             httpStatusCode = HttpStatus.BAD_GATEWAY,
-                        )
+                            operation = operation.name,
+                            organizationFiscalCode = organizationFiscalCode)
                     }
                 }
             }
@@ -135,7 +141,8 @@ class GpdClient(
                 GpdClientException(
                     description = "Unexpected error while invoking GPD for operation $operation",
                     httpStatusCode = HttpStatus.BAD_GATEWAY,
-                )
+                    operation = operation.name,
+                    organizationFiscalCode = organizationFiscalCode)
             }
         }
     }

@@ -117,7 +117,7 @@ class GpdClientTest {
         createFailsWith(webClientError(status))
             .expectGpdError(
                 HttpStatus.CONFLICT,
-                "Client error while invoking GPD for operation ${Operation.CREATE_DEBT_POSITION} with status code ${HttpStatus.valueOf(status)}")
+                "Client error while invoking GPD for operation ${Operation.CREATE_DEBT_POSITION} with status code from GPD ${HttpStatus.valueOf(status)}")
     }
 
     @ParameterizedTest
@@ -128,7 +128,7 @@ class GpdClientTest {
         createFailsWith(webClientError(status))
             .expectGpdError(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                "Error communicating with GPD for operation ${Operation.CREATE_DEBT_POSITION} with status code ${HttpStatus.valueOf(status)}")
+                "Error communicating with GPD for operation ${Operation.CREATE_DEBT_POSITION} with status code from GPD ${HttpStatus.valueOf(status)}")
     }
 
     @ParameterizedTest
@@ -137,7 +137,7 @@ class GpdClientTest {
         createFailsWith(webClientError(status))
             .expectGpdError(
                 HttpStatus.BAD_GATEWAY,
-                "Unexpected error while invoking GPD for operation ${Operation.CREATE_DEBT_POSITION} with status code ${HttpStatus.valueOf(status)}")
+                "Unexpected error while invoking GPD for operation ${Operation.CREATE_DEBT_POSITION} with status code from GPD ${HttpStatus.valueOf(status)}")
     }
 
     @Test
@@ -167,7 +167,7 @@ class GpdClientTest {
         invalidateFailsWith(webClientError(status))
             .expectGpdError(
                 HttpStatus.CONFLICT,
-                "Client error while invoking GPD for operation ${Operation.INVALIDATE_DEBT_POSITION} with status code ${HttpStatus.valueOf(status)}")
+                "Client error while invoking GPD for operation ${Operation.INVALIDATE_DEBT_POSITION} with status code from GPD ${HttpStatus.valueOf(status)}")
     }
 
     @ParameterizedTest
@@ -178,7 +178,7 @@ class GpdClientTest {
         invalidateFailsWith(webClientError(status))
             .expectGpdError(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                "Error communicating with GPD for operation ${Operation.INVALIDATE_DEBT_POSITION} with status code ${HttpStatus.valueOf(status)}")
+                "Error communicating with GPD for operation ${Operation.INVALIDATE_DEBT_POSITION} with status code from GPD ${HttpStatus.valueOf(status)}")
     }
 
     @ParameterizedTest
@@ -187,7 +187,7 @@ class GpdClientTest {
         invalidateFailsWith(webClientError(status))
             .expectGpdError(
                 HttpStatus.BAD_GATEWAY,
-                "Unexpected error while invoking GPD for operation ${Operation.INVALIDATE_DEBT_POSITION} with status code ${HttpStatus.valueOf(status)}")
+                "Unexpected error while invoking GPD for operation ${Operation.INVALIDATE_DEBT_POSITION} with status code from GPD ${HttpStatus.valueOf(status)}")
     }
 
     @Test
