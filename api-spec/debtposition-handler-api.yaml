@@ -28,7 +28,7 @@ externalDocs:
 security:
   - PagopaInternalApiKeyAuth: []
 paths:
-  /debt-positions:
+  /debt-positions/{orgFiscalCode}:
     post:
       tags:
         - pagopa-internal
@@ -39,6 +39,13 @@ paths:
       operationId: createDebtPosition
       parameters:
         - $ref: '#/components/parameters/CorrelationId'
+        - name: orgFiscalCode
+          in: path
+          required: true
+          description: The creditor institution fiscal code
+          schema:
+            type: string
+            examples: [ "77777777777" ]
       requestBody:
         required: true
         content:
@@ -109,7 +116,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ProblemJson'
-  /debt-positions/{iupd}/invalidations:
+  /debt-positions/{orgFiscalCode}/{iupd}/invalidations:
     post:
       tags:
         - pagopa-internal
@@ -120,6 +127,13 @@ paths:
       operationId: invalidateDebtPosition
       parameters:
         - $ref: '#/components/parameters/CorrelationId'
+        - name: orgFiscalCode
+          in: path
+          required: true
+          description: The creditor institution fiscal code
+          schema:
+            type: string
+            examples: [ "77777777777" ]
         - name: iupd
           in: path
           required: true
