@@ -58,14 +58,13 @@
               }
             ],
             "url": {
-              "raw": "{{HOSTNAME}}{{BASE_PATH}}/organizations/{{ORG_FISCAL_CODE}}/debt-positions",
+              "raw": "{{HOSTNAME}}{{BASE_PATH}}/debt-positions/{{ORG_FISCAL_CODE}}",
               "host": [
                 "{{HOSTNAME}}{{BASE_PATH}}"
               ],
               "path": [
-                "organizations",
-                "{{ORG_FISCAL_CODE}}",
-                "debt-positions"
+                "debt-positions",
+                "{{ORG_FISCAL_CODE}}"
               ]
             },
             "body": {
@@ -117,14 +116,13 @@
               }
             ],
             "url": {
-              "raw": "{{HOSTNAME}}{{BASE_PATH}}/organizations/{{ORG_FISCAL_CODE}}/debt-positions",
+              "raw": "{{HOSTNAME}}{{BASE_PATH}}/debt-positions/{{ORG_FISCAL_CODE}}",
               "host": [
                 "{{HOSTNAME}}{{BASE_PATH}}"
               ],
               "path": [
-                "organizations",
-                "{{ORG_FISCAL_CODE}}",
-                "debt-positions"
+                "debt-positions",
+                "{{ORG_FISCAL_CODE}}"
               ]
             },
             "body": {
@@ -189,14 +187,13 @@
               }
             ],
             "url": {
-              "raw": "{{HOSTNAME}}{{BASE_PATH}}/organizations/{{ORG_FISCAL_CODE}}/debt-positions",
+              "raw": "{{HOSTNAME}}{{BASE_PATH}}/debt-positions/{{ORG_FISCAL_CODE}}",
               "host": [
                 "{{HOSTNAME}}{{BASE_PATH}}"
               ],
               "path": [
-                "organizations",
-                "{{ORG_FISCAL_CODE}}",
-                "debt-positions"
+                "debt-positions",
+                "{{ORG_FISCAL_CODE}}"
               ]
             },
             "body": {
@@ -256,14 +253,13 @@
               }
             ],
             "url": {
-              "raw": "{{HOSTNAME}}{{BASE_PATH}}/organizations/{{ORG_FISCAL_CODE}}/debt-positions",
+              "raw": "{{HOSTNAME}}{{BASE_PATH}}/debt-positions/{{ORG_FISCAL_CODE}}",
               "host": [
                 "{{HOSTNAME}}{{BASE_PATH}}"
               ],
               "path": [
-                "organizations",
-                "{{ORG_FISCAL_CODE}}",
-                "debt-positions"
+                "debt-positions",
+                "{{ORG_FISCAL_CODE}}"
               ]
             },
             "body": {
@@ -321,14 +317,13 @@
               }
             ],
             "url": {
-              "raw": "{{HOSTNAME}}{{BASE_PATH}}/organizations/{{ORG_FISCAL_CODE}}/debt-positions",
+              "raw": "{{HOSTNAME}}{{BASE_PATH}}/debt-positions/{{ORG_FISCAL_CODE}}",
               "host": [
                 "{{HOSTNAME}}{{BASE_PATH}}"
               ],
               "path": [
-                "organizations",
-                "{{ORG_FISCAL_CODE}}",
-                "debt-positions"
+                "debt-positions",
+                "{{ORG_FISCAL_CODE}}"
               ]
             },
             "body": {
