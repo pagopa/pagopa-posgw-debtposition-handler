@@ -2,17 +2,21 @@ package it.pagopa.posgw.debtposition.handler.controllers
 
 import it.gov.pagopa.noticenumber.exception.AppErrorCodeMessageEnum
 import it.gov.pagopa.noticenumber.exception.AppException
+import it.pagopa.generated.posgw.debtposition.handler.api.DebtPositionsApi
 import it.pagopa.generated.posgw.debtposition.handler.model.DebtPositionRequestDto
 import it.pagopa.generated.posgw.debtposition.handler.model.DebtPositionResponseDto
 import it.pagopa.generated.posgw.debtposition.handler.model.DebtorDto
 import it.pagopa.generated.posgw.debtposition.handler.model.InstallmentDetailDto
 import it.pagopa.generated.posgw.debtposition.handler.model.PaymentOptionDto
 import it.pagopa.generated.posgw.debtposition.handler.model.TransferItemDto
+import it.pagopa.generated.posgw.gpd.model.PaymentPositionModelV3Dto
+import it.pagopa.posgw.debtposition.handler.client.GpdClient
 import it.pagopa.posgw.debtposition.handler.exception.GpdClientException
 import it.pagopa.posgw.debtposition.handler.exceptionhandler.ExceptionHandler
 import it.pagopa.posgw.debtposition.handler.services.DebtPositionsService
 import java.time.OffsetDateTime
 import java.util.UUID
+import kotlin.String
 import kotlin.test.assertEquals
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.BeforeEach
@@ -23,6 +27,7 @@ import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.BDDMockito.given
+import org.mockito.Mockito
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
@@ -39,6 +44,8 @@ class DebtPositionsControllerTest {
 
     private val orgFiscalCode = "12345678901"
     private val correlationId: UUID = UUID.randomUUID()
+
+    private inline fun <reified T> any(): T = Mockito.any<T>()
 
     @BeforeEach
     fun setUp() {
@@ -241,9 +248,70 @@ class DebtPositionsControllerTest {
     }
 
     @Test
-    fun `invalidateDebtPosition is not implemented yet`() = runTest {
-        assertThrows<NotImplementedError> {
-            controller.invalidateDebtPosition(correlationId, orgFiscalCode, "IUPD-2024-XYZ-001")
+    fun `POST invalidateDebtPosition returns 204 when passed correct path parameters`() = runTest {
+        val correlationId = UUID.randomUUID()
+        val iupd = "IUPD-2024-XYZ-001"
+        val orgFiscalCode = "43212938433"
+
+        Mockito.`when`(serviceMock.invalidateDebtPosition(any(), any(), any()))
+            .thenReturn(Mono.just(PaymentPositionModelV3Dto()))
+
+        webTestClient
+            .post()
+            .uri(DebtPositionsApi.PATH_INVALIDATE_DEBT_POSITION, orgFiscalCode, iupd)
+            .contentType(MediaType.APPLICATION_JSON)
+            .header("x-correlation-id", correlationId.toString())
+            .exchange()
+            .expectStatus()
+            .isEqualTo(HttpStatus.NO_CONTENT)
+    }
+
+    @Test
+    fun `POST invalidateDebtPosition returns the GPD error status and problem json when throwing GpdClientException`() {
+        val iupd = "IUPD-2024-XYZ-001"
+        val exc1 =
+            GpdClientException(
+                "Mocked not found",
+                HttpStatus.NOT_FOUND,
+                GpdClient.Companion.Operation.INVALIDATE_DEBT_POSITION.toString(),
+                orgFiscalCode)
+        val exc2 =
+            GpdClientException(
+                "Mocked bad request",
+                HttpStatus.BAD_REQUEST,
+                GpdClient.Companion.Operation.INVALIDATE_DEBT_POSITION.toString(),
+                orgFiscalCode)
+        val exc3 =
+            GpdClientException(
+                "Mocked internal server error",
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                GpdClient.Companion.Operation.INVALIDATE_DEBT_POSITION.toString(),
+                orgFiscalCode)
+
+        Mockito.`when`(serviceMock.invalidateDebtPosition(any(), any(), any()))
+            .thenThrow(exc1)
+            .thenThrow(exc2)
+            .thenThrow(exc3)
+
+        val client =
+            webTestClient
+                .post()
+                .uri(DebtPositionsApi.PATH_INVALIDATE_DEBT_POSITION, orgFiscalCode, iupd)
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("x-correlation-id", correlationId.toString())
+
+        listOf(exc1, exc2, exc3).forEach {
+            client
+                .exchange()
+                .expectStatus()
+                .isEqualTo(it.httpStatusCode)
+                .expectBody()
+                .jsonPath("$.title")
+                .isEqualTo("GPD Invocation exception")
+                .jsonPath("$.detail")
+                .isEqualTo(it.description)
+                .jsonPath("$.status")
+                .isEqualTo(it.httpStatusCode.value())
         }
     }
 }

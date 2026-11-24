@@ -39,7 +39,17 @@ class DebtPositionsController(private val debtPositionService: DebtPositionsServ
         xCorrelationId: UUID,
         orgFiscalCode: String,
         iupd: String
-    ): ResponseEntity<Unit> {
-        TODO("Not yet implemented")
-    }
+    ): ResponseEntity<Unit> =
+        debtPositionService
+            .invalidateDebtPosition(
+                xCorrelationId = xCorrelationId, orgFiscalCode = orgFiscalCode, iupd = iupd)
+            .map { ResponseEntity.noContent().build<Unit>() }
+            .contextWrite {
+                LogTracingUtils.enrichContextMDC(
+                    mapOf(
+                        LogTracingUtils.Companion.AttributeKeys.CORRELATION_ID to
+                            xCorrelationId.toString()),
+                    it)
+            }
+            .awaitSingle()
 }

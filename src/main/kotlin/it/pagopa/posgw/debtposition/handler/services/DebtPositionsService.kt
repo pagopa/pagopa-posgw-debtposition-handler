@@ -4,9 +4,11 @@ import it.gov.pagopa.noticenumber.config.NoticeNumberProperties
 import it.gov.pagopa.noticenumber.service.NoticeNumberGeneratorService
 import it.pagopa.generated.posgw.debtposition.handler.model.DebtPositionRequestDto
 import it.pagopa.generated.posgw.debtposition.handler.model.DebtPositionResponseDto
+import it.pagopa.generated.posgw.gpd.model.PaymentPositionModelV3Dto
 import it.pagopa.posgw.common.utils.LogTracingUtils
 import it.pagopa.posgw.debtposition.handler.client.GpdClient
 import it.pagopa.posgw.debtposition.handler.mapper.toPaymentPosition
+import java.util.UUID
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -87,4 +89,12 @@ class DebtPositionsService(
                     .failure()
                     .logError(logger, "Error creating debt position")
             }
+
+    fun invalidateDebtPosition(
+        xCorrelationId: UUID,
+        orgFiscalCode: String,
+        iupd: String,
+    ): Mono<PaymentPositionModelV3Dto> {
+        return gpdClient.invalidateDebtPosition(orgFiscalCode, iupd, xCorrelationId.toString())
+    }
 }
