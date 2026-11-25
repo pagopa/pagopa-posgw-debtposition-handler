@@ -353,11 +353,38 @@ components:
             - channel: POS
     DebtPositionResponse:
       type: object
+      required:
+        - creditorInstitutionFiscalCode
+        - noticeNumber
+        - iuv
+        - iupd
+        - status
       properties:
-        idDeptPosition:
+        creditorInstitutionFiscalCode:
           type: string
           examples:
-            - "GPD-ID-99887766"
+            - "80001230456"
+        noticeNumber:
+          type: string
+          examples:
+            - "302000100000012345"
+        iuv:
+          type: string
+          examples:
+              - "020001000000123456"
+        iupd:
+          type: string
+          examples:
+            - "IUPD-2024-XYZ-001"
+        status:
+          type: string
+          enum:
+            - "DRAFT"
+            - "PUBLISHED"
+            - "VALID"
+            - "UNPAYABLE"
+            - "PARTIALLY_PAID"
+            - "PAID"
     ProblemJson:
       description: Body definition for error responses containing failure details
       type: object
