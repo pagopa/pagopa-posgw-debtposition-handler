@@ -59,9 +59,10 @@ class DebtPositionsControllerTest {
     fun `createDebtPosition direct call throws NotImplementedError`() = runTest {
         val correlationId = UUID.randomUUID()
         val requestBody = buildSampleDebtPositionRequestDto()
+        val orgFiscalCode = "12345678901"
 
         assertThrows<NotImplementedError> {
-            controller.createDebtPosition(correlationId, requestBody)
+            controller.createDebtPosition(correlationId, orgFiscalCode, requestBody)
         }
     }
 
@@ -69,9 +70,10 @@ class DebtPositionsControllerTest {
     fun `invalidateDebtPosition direct call throws NotImplementedError`() = runTest {
         val correlationId = UUID.randomUUID()
         val iupd = "IUPD-2024-XYZ-001"
+        val orgFiscalCode = "12345678901"
 
         assertThrows<NotImplementedError> {
-            controller.invalidateDebtPosition(correlationId, iupd)
+            controller.invalidateDebtPosition(correlationId, orgFiscalCode, iupd)
         }
     }
 
@@ -88,6 +90,6 @@ class DebtPositionsControllerTest {
             .bodyValue(requestDto)
             .exchange()
             .expectStatus()
-            .is5xxServerError
+            .is4xxClientError
     }
 }

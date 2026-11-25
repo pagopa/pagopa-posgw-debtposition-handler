@@ -12,14 +12,15 @@ class DebtPositionsController : DebtPositionsApi {
 
     override suspend fun createDebtPosition(
         xCorrelationId: UUID,
+        orgFiscalCode: String,
         debtPositionRequestDto: DebtPositionRequestDto
     ): ResponseEntity<DebtPositionResponseDto> {
         TODO("Not yet implemented")
-        TODO("Add logs OER")
     }
 
     override suspend fun invalidateDebtPosition(
         xCorrelationId: UUID,
+        orgFiscalCode: String,
         iupd: String
     ): ResponseEntity<Unit> {
         TODO("Not yet implemented")
