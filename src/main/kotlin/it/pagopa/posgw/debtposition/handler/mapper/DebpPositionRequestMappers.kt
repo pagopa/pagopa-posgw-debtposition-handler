@@ -18,7 +18,8 @@ import it.pagopa.generated.posgw.gpd.model.TransferModelDto
  * assigned to every generated transfer.
  */
 fun DebtPositionRequestDto.toPaymentPosition(
-    organizationFiscalCode: String
+    organizationFiscalCode: String,
+    nav: String
 ): PaymentPositionModelV3Dto {
     val installment = this.paymentOption.installment
 
@@ -29,7 +30,7 @@ fun DebtPositionRequestDto.toPaymentPosition(
             // (https://pagopa.atlassian.net/wiki/spaces/I/pages/3316645948/DR+PFM-1+-+Specifiche+integrazione+POS+Gateway+-+GPD#Creazione-one-shot)
             .switchToExpired(this.switchToExpired)
             .debtor(debtor.toGpdDebtor())
-            .installments(listOf(installment.toGpdInstallment(organizationFiscalCode)))
+            .installments(listOf(installment.toGpdInstallment(organizationFiscalCode, nav)))
 
     return PaymentPositionModelV3Dto()
         .iupd(this.iupd)
@@ -45,12 +46,14 @@ private fun DebtorDto.toGpdDebtor(): DebtorModelDto =
         .fullName(this.fullName)
 
 private fun InstallmentDetailDto.toGpdInstallment(
-    organizationFiscalCode: String
+    organizationFiscalCode: String,
+    nav: String
 ): InstallmentModelDto {
     val totalAmount = this.transferList.sumOf { it.amount }
 
     return InstallmentModelDto()
-        .iuv(this.iuv)
+        .iuv(this.iuv.ifBlank { nav.substring(1) })
+        .nav(nav)
         .amount(totalAmount)
         .description(this.description)
         .dueDate(this.dueDate)

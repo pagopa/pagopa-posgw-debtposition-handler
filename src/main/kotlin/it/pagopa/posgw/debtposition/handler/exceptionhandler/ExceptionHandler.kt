@@ -1,5 +1,6 @@
 package it.pagopa.posgw.debtposition.handler.exceptionhandler
 
+import it.gov.pagopa.noticenumber.exception.AppException
 import it.pagopa.generated.posgw.debtposition.handler.model.ProblemJsonDto
 import it.pagopa.posgw.common.utils.LogTracingUtils
 import it.pagopa.posgw.debtposition.handler.exception.ApiError
@@ -56,6 +57,27 @@ class ExceptionHandler {
                 "Error performing operation ${e.operation}",
             )
         return toResponse(e.toRestException())
+    }
+
+    /**
+     * AppException exception handler. This type of error can be thrown by the GPD client when a
+     * Redis error occurs, caused by an error during the generation of the NAV or Redis unavailable.
+     */
+    @ExceptionHandler(AppException::class)
+    fun handleException(e: AppException): ResponseEntity<ProblemJsonDto> {
+        LogTracingUtils.loggerTracingUtils()
+            .dependency(LogTracingUtils.REDIS_DEPENDENCY)
+            .failure()
+            .details(mapOf("app_error_code_message" to e.message.orEmpty()))
+            .logWithStackTrace(
+                logger,
+                e,
+                "Error performing nav generation operation",
+            )
+        return problem(
+            HttpStatus.SERVICE_UNAVAILABLE.value(),
+            HttpStatus.SERVICE_UNAVAILABLE.reasonPhrase,
+            "Error performing nav generation operation")
     }
 
     /** Fallback for unexpected errors: the exception details are logged but never exposed */
