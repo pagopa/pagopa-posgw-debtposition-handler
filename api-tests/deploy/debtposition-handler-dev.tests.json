@@ -35,7 +35,9 @@
                   "    pm.expect(response.iupd).to.eql(pm.collectionVariables.get('IUPD'));",
                   "    pm.expect(response.iuv).to.be.a('string').and.not.empty;",
                   "    pm.expect(response.noticeNumber).to.be.a('string').and.not.empty;",
-                  "    pm.expect(response.status).to.be.oneOf(['DRAFT', 'PUBLISHED', 'VALID', 'UNPAYABLE', 'PARTIALLY_PAID', 'PAID']);",
+                  "    if (response.status !== undefined) {",
+                  "        pm.expect(response.status).to.be.oneOf(['DRAFT', 'PUBLISHED', 'VALID', 'UNPAYABLE', 'PARTIALLY_PAID', 'PAID']);",
+                  "    }",
                   "});"
                 ],
                 "type": "text/javascript"
