@@ -28,10 +28,14 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test(\"Create debt position - Status code is 200 with debt position id\", function () {",
+                  "pm.test(\"Create debt position - Status code is 200 with created debt position\", function () {",
                   "    pm.response.to.have.status(200);",
                   "    const response = pm.response.json();",
-                  "    pm.expect(response.idDeptPosition).to.be.a('string').and.not.empty;",
+                  "    pm.expect(response.creditorInstitutionFiscalCode).to.eql(pm.environment.get('ORG_FISCAL_CODE'));",
+                  "    pm.expect(response.iupd).to.eql(pm.collectionVariables.get('IUPD'));",
+                  "    pm.expect(response.iuv).to.be.a('string').and.not.empty;",
+                  "    pm.expect(response.noticeNumber).to.be.a('string').and.not.empty;",
+                  "    pm.expect(response.status).to.be.oneOf(['DRAFT', 'PUBLISHED', 'VALID', 'UNPAYABLE', 'PARTIALLY_PAID', 'PAID']);",
                   "});"
                 ],
                 "type": "text/javascript"

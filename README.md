@@ -110,7 +110,7 @@ TODO
 
 #### API testing
 
-The [Postman](https://www.postman.com/) collection `api-tests/debtposition-handler.api.tests.json` calls the service
+The [Postman](https://www.postman.com/) collection `api-tests/deploy/debtposition-handler-dev.tests.json` calls the service
 through APIM. The deploy pipeline runs it with [newman](https://github.com/postmanlabs/newman) in the `API_DEV_test`
 stage after each DEV deploy, with the APIM subscription key injected from the `DEBTPOSITION_HANDLER_API_KEY_DEV`
 pipeline secret.
@@ -118,8 +118,8 @@ pipeline secret.
 To run it manually against DEV:
 
 ```shell
-npx newman run api-tests/debtposition-handler.api.tests.json \
-  -e api-tests/env/debtposition-handler_dev.env.json \
+npx newman run api-tests/deploy/debtposition-handler-dev.tests.json \
+  -e api-tests/deploy/debtposition-handler-dev.env.json \
   --env-var API_SUBSCRIPTION_KEY=<APIM subscription key>
 ```
 

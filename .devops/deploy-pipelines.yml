@@ -153,8 +153,8 @@ stages:
         steps:
           - template: azure-templates/api-tests.yml
             parameters:
-              ENV_FILE: "api-tests/env/debtposition-handler_dev.env.json"
-              API_TEST_FILE: "api-tests/debtposition-handler.api.tests.json"
+              ENV_FILE: "api-tests/deploy/debtposition-handler-dev.env.json"
+              API_TEST_FILE: "api-tests/deploy/debtposition-handler-dev.tests.json"
               TEST_FILE_PREFIX: "dev"
               API_SUBSCRIPTION_KEY: $(DEBTPOSITION_HANDLER_API_KEY_DEV)
   # --- END API TEST for DEV DEPLOY --- #
