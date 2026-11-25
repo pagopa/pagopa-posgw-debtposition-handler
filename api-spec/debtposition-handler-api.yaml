@@ -358,7 +358,6 @@ components:
         - noticeNumber
         - iuv
         - iupd
-        - status
       properties:
         creditorInstitutionFiscalCode:
           type: string
