@@ -1,0 +1,367 @@
+{
+  "info": {
+    "_postman_id": "6a0f2f5e-5d0b-4f3e-9a51-2f4c8d7b1c01",
+    "name": "pagoPA posgw debt position handler",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Debt position creation",
+      "item": [
+        {
+          "name": "Create debt position",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// unique iupd/iuv per run, iuv as in GPD tests: segregation code + 15 random digits",
+                  "const random = (n) => Array.from({ length: n }, () => Math.floor(Math.random() * 10)).join('');",
+                  "pm.collectionVariables.set('IUPD', 'IUPD_POSGW_' + Date.now() + '_' + random(4));",
+                  "pm.collectionVariables.set('IUV', '01' + random(15));",
+                  "pm.collectionVariables.set('DUE_DATE', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString());"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Create debt position - Status code is 200 with created debt position\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.creditorInstitutionFiscalCode).to.eql(pm.environment.get('ORG_FISCAL_CODE'));",
+                  "    pm.expect(response.iupd).to.eql(pm.collectionVariables.get('IUPD'));",
+                  "    // iuv is sent, so the service echoes it and builds the notice number as aux digit + iuv",
+                  "    const iuv = pm.collectionVariables.get('IUV');",
+                  "    pm.expect(response.iuv).to.eql(iuv);",
+                  "    pm.expect(response.noticeNumber).to.be.a('string').and.have.lengthOf(18);",
+                  "    pm.expect(response.noticeNumber.substring(1)).to.eql(iuv);",
+                  "    if (response.status !== undefined) {",
+                  "        pm.expect(response.status).to.be.oneOf(['DRAFT', 'PUBLISHED', 'VALID', 'UNPAYABLE', 'PARTIALLY_PAID', 'PAID']);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Ocp-Apim-Subscription-Key",
+                "value": "{{API_SUBSCRIPTION_KEY}}",
+                "type": "text"
+              },
+              {
+                "key": "x-correlation-id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{HOSTNAME}}{{BASE_PATH}}/debt-positions/{{ORG_FISCAL_CODE}}",
+              "host": [
+                "{{HOSTNAME}}{{BASE_PATH}}"
+              ],
+              "path": [
+                "debt-positions",
+                "{{ORG_FISCAL_CODE}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"EC posgw api test\",\n  \"iupd\": \"{{IUPD}}\",\n  \"officeName\": \"Ufficio posgw api test\",\n  \"switchToExpired\": false,\n  \"debtor\": {\n    \"type\": \"F\",\n    \"fiscalCode\": \"ROSMRI87A04H501K\",\n    \"fullName\": \"Mario Rossi\"\n  },\n  \"paymentOption\": {\n    \"installment\": {\n      \"iuv\": \"{{IUV}}\",\n      \"description\": \"posgw debt position handler api test\",\n      \"dueDate\": \"{{DUE_DATE}}\",\n      \"transferList\": [\n        {\n          \"amount\": 100,\n          \"remittanceInformation\": \"posgw debt position handler api test\",\n          \"iban\": \"IT60X0542811101000000123456\",\n          \"category\": \"9/0101108TS/\"\n        }\n      ]\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create debt position with already existing iupd",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Create debt position with already existing iupd - Status code is 409 with problem json\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.status).to.eql(409);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Ocp-Apim-Subscription-Key",
+                "value": "{{API_SUBSCRIPTION_KEY}}",
+                "type": "text"
+              },
+              {
+                "key": "x-correlation-id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{HOSTNAME}}{{BASE_PATH}}/debt-positions/{{ORG_FISCAL_CODE}}",
+              "host": [
+                "{{HOSTNAME}}{{BASE_PATH}}"
+              ],
+              "path": [
+                "debt-positions",
+                "{{ORG_FISCAL_CODE}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"EC posgw api test\",\n  \"iupd\": \"{{IUPD}}\",\n  \"officeName\": \"Ufficio posgw api test\",\n  \"switchToExpired\": false,\n  \"debtor\": {\n    \"type\": \"F\",\n    \"fiscalCode\": \"ROSMRI87A04H501K\",\n    \"fullName\": \"Mario Rossi\"\n  },\n  \"paymentOption\": {\n    \"installment\": {\n      \"iuv\": \"{{IUV}}\",\n      \"description\": \"posgw debt position handler api test\",\n      \"dueDate\": \"{{DUE_DATE}}\",\n      \"transferList\": [\n        {\n          \"amount\": 100,\n          \"remittanceInformation\": \"posgw debt position handler api test\",\n          \"iban\": \"IT60X0542811101000000123456\",\n          \"category\": \"9/0101108TS/\"\n        }\n      ]\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create debt position with missing required field",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// unique iupd/iuv per run, iuv as in GPD tests: segregation code + 15 random digits",
+                  "const random = (n) => Array.from({ length: n }, () => Math.floor(Math.random() * 10)).join('');",
+                  "pm.collectionVariables.set('IUPD', 'IUPD_POSGW_' + Date.now() + '_' + random(4));",
+                  "pm.collectionVariables.set('IUV', '01' + random(15));",
+                  "pm.collectionVariables.set('DUE_DATE', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString());"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Create debt position with missing required field - Status code is 400 with problem json\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.status).to.eql(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Ocp-Apim-Subscription-Key",
+                "value": "{{API_SUBSCRIPTION_KEY}}",
+                "type": "text"
+              },
+              {
+                "key": "x-correlation-id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{HOSTNAME}}{{BASE_PATH}}/debt-positions/{{ORG_FISCAL_CODE}}",
+              "host": [
+                "{{HOSTNAME}}{{BASE_PATH}}"
+              ],
+              "path": [
+                "debt-positions",
+                "{{ORG_FISCAL_CODE}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"EC posgw api test\",\n  \"iupd\": \"{{IUPD}}\",\n  \"officeName\": \"Ufficio posgw api test\",\n  \"switchToExpired\": false,\n  \"paymentOption\": {\n    \"installment\": {\n      \"iuv\": \"{{IUV}}\",\n      \"description\": \"posgw debt position handler api test\",\n      \"dueDate\": \"{{DUE_DATE}}\",\n      \"transferList\": [\n        {\n          \"amount\": 100,\n          \"remittanceInformation\": \"posgw debt position handler api test\",\n          \"iban\": \"IT60X0542811101000000123456\",\n          \"category\": \"9/0101108TS/\"\n        }\n      ]\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create debt position without correlation id",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// unique iupd/iuv per run, iuv as in GPD tests: segregation code + 15 random digits",
+                  "const random = (n) => Array.from({ length: n }, () => Math.floor(Math.random() * 10)).join('');",
+                  "pm.collectionVariables.set('IUPD', 'IUPD_POSGW_' + Date.now() + '_' + random(4));",
+                  "pm.collectionVariables.set('IUV', '01' + random(15));",
+                  "pm.collectionVariables.set('DUE_DATE', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString());"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Create debt position without correlation id - Status code is 400 with problem json\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.status).to.eql(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Ocp-Apim-Subscription-Key",
+                "value": "{{API_SUBSCRIPTION_KEY}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{HOSTNAME}}{{BASE_PATH}}/debt-positions/{{ORG_FISCAL_CODE}}",
+              "host": [
+                "{{HOSTNAME}}{{BASE_PATH}}"
+              ],
+              "path": [
+                "debt-positions",
+                "{{ORG_FISCAL_CODE}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"EC posgw api test\",\n  \"iupd\": \"{{IUPD}}\",\n  \"officeName\": \"Ufficio posgw api test\",\n  \"switchToExpired\": false,\n  \"debtor\": {\n    \"type\": \"F\",\n    \"fiscalCode\": \"ROSMRI87A04H501K\",\n    \"fullName\": \"Mario Rossi\"\n  },\n  \"paymentOption\": {\n    \"installment\": {\n      \"iuv\": \"{{IUV}}\",\n      \"description\": \"posgw debt position handler api test\",\n      \"dueDate\": \"{{DUE_DATE}}\",\n      \"transferList\": [\n        {\n          \"amount\": 100,\n          \"remittanceInformation\": \"posgw debt position handler api test\",\n          \"iban\": \"IT60X0542811101000000123456\",\n          \"category\": \"9/0101108TS/\"\n        }\n      ]\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create debt position without subscription key",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// unique iupd/iuv per run, iuv as in GPD tests: segregation code + 15 random digits",
+                  "const random = (n) => Array.from({ length: n }, () => Math.floor(Math.random() * 10)).join('');",
+                  "pm.collectionVariables.set('IUPD', 'IUPD_POSGW_' + Date.now() + '_' + random(4));",
+                  "pm.collectionVariables.set('IUV', '01' + random(15));",
+                  "pm.collectionVariables.set('DUE_DATE', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString());"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Create debt position without subscription key - Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-correlation-id",
+                "value": "{{$guid}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{HOSTNAME}}{{BASE_PATH}}/debt-positions/{{ORG_FISCAL_CODE}}",
+              "host": [
+                "{{HOSTNAME}}{{BASE_PATH}}"
+              ],
+              "path": [
+                "debt-positions",
+                "{{ORG_FISCAL_CODE}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"EC posgw api test\",\n  \"iupd\": \"{{IUPD}}\",\n  \"officeName\": \"Ufficio posgw api test\",\n  \"switchToExpired\": false,\n  \"debtor\": {\n    \"type\": \"F\",\n    \"fiscalCode\": \"ROSMRI87A04H501K\",\n    \"fullName\": \"Mario Rossi\"\n  },\n  \"paymentOption\": {\n    \"installment\": {\n      \"iuv\": \"{{IUV}}\",\n      \"description\": \"posgw debt position handler api test\",\n      \"dueDate\": \"{{DUE_DATE}}\",\n      \"transferList\": [\n        {\n          \"amount\": 100,\n          \"remittanceInformation\": \"posgw debt position handler api test\",\n          \"iban\": \"IT60X0542811101000000123456\",\n          \"category\": \"9/0101108TS/\"\n        }\n      ]\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "IUPD",
+      "value": ""
+    },
+    {
+      "key": "IUV",
+      "value": ""
+    },
+    {
+      "key": "DUE_DATE",
+      "value": ""
+    }
+  ]
+}

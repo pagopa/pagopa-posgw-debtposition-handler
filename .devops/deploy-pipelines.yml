@@ -143,6 +143,21 @@ stages:
                     ${{ if eq(parameters['NATIVE_COMPILATION'], False) }}:
                       ARGUMENTS: "--timeout 5m0s --values helm/valuesOverrides/overrides-jvm-dev.yaml"
   # --- END Deploy DEV --- #
+
+  # --- START API TEST for DEV DEPLOY --- #
+  - stage: "API_DEV_test"
+    displayName: 'Running API test on DEV app'
+    dependsOn: Deploy_for_DEV
+    jobs:
+      - job: newman_api_test
+        steps:
+          - template: azure-templates/api-tests.yml
+            parameters:
+              ENV_FILE: "api-tests/deploy/debtposition-handler-dev.env.json"
+              API_TEST_FILE: "api-tests/deploy/debtposition-handler-dev.tests.json"
+              TEST_FILE_PREFIX: "dev"
+              API_SUBSCRIPTION_KEY: $(DEBTPOSITION_HANDLER_API_KEY_DEV)
+  # --- END API TEST for DEV DEPLOY --- #
   # --- START Deploy UAT --- #
 #   - stage: "Build_release_candidate"
 #     displayName: 'Build release candidate'
