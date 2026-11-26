@@ -4,8 +4,11 @@ import it.gov.pagopa.noticenumber.config.NoticeNumberProperties
 import it.gov.pagopa.noticenumber.service.NoticeNumberGeneratorService
 import it.pagopa.generated.posgw.debtposition.handler.model.DebtPositionRequestDto
 import it.pagopa.generated.posgw.debtposition.handler.model.DebtPositionResponseDto
+import it.pagopa.posgw.common.utils.LogTracingUtils
 import it.pagopa.posgw.debtposition.handler.client.GpdClient
 import it.pagopa.posgw.debtposition.handler.mapper.toPaymentPosition
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
@@ -16,6 +19,8 @@ class DebtPositionsService(
     private val noticeNumberGeneratorService: NoticeNumberGeneratorService,
     private val noticeNumberProperties: NoticeNumberProperties
 ) {
+
+    val logger: Logger = LoggerFactory.getLogger(javaClass.name)
 
     fun createDebtPosition(
         organizationFiscalCode: String,
@@ -61,5 +66,25 @@ class DebtPositionsService(
                 else
                     DebtPositionResponseDto(
                         organizationFiscalCode, nav, nav.substring(1), debtPositionRequestDto.iupd)
+            }
+            .doOnSuccess { _ ->
+                LogTracingUtils.loggerTracingUtils()
+                    .dependency(LogTracingUtils.GPD_DEPENDENCY)
+                    .details(
+                        mapOf(
+                            "organization_fiscal_code" to organizationFiscalCode,
+                        ))
+                    .success()
+                    .logInfo(logger, "Debt position created successfully")
+            }
+            .doOnError { _ ->
+                LogTracingUtils.loggerTracingUtils()
+                    .dependency(LogTracingUtils.GPD_DEPENDENCY)
+                    .details(
+                        mapOf(
+                            "organization_fiscal_code" to organizationFiscalCode,
+                        ))
+                    .failure()
+                    .logError(logger, "Error creating debt position")
             }
 }
