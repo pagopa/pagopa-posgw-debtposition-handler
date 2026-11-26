@@ -12,9 +12,6 @@ class MicrometerMdcConfiguration {
     private val contextBound =
         setOf(
             AttributeKeys.EVENT_ACTION.key,
-            AttributeKeys.CTX_TRANSACTION_ID.key,
-            AttributeKeys.CTX_EVENT_CODE.key,
-            AttributeKeys.CTX_EVENT_ID.key,
             AttributeKeys.CTX_REQUEST_ID.key,
         )
 

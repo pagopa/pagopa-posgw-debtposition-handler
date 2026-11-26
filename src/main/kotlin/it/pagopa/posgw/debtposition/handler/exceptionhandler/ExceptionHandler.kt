@@ -50,7 +50,7 @@ class ExceptionHandler {
                 ))
             .attributes(mapOf(LogTracingUtils.Companion.AttributeKeys.EVENT_ACTION to e.operation))
             .failure()
-            .logWithStackTrace(
+            .logError(
                 logger,
                 e,
                 "Error performing operation ${e.operation}",
@@ -78,7 +78,7 @@ class ExceptionHandler {
     ): ResponseEntity<ProblemJsonDto> {
         LogTracingUtils.loggerTracingUtils()
             .failure()
-            .logWithStackTrace(
+            .logError(
                 logger,
                 e,
                 "Input request is not valid",
