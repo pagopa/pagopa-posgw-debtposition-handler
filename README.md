@@ -124,7 +124,7 @@ npx newman run api-tests/deploy/debtposition-handler-dev.tests.json \
 ```
 
 The subscription key is stored in the `debtposition-handler-api-key` secret of the posgw Key Vault.
-Each successful run creates a real debt position on GPD DEV.
+Each successful run creates a real debt position on GPD DEV and then invalidates it.
 
 ### Pos-gateway Common Library
 

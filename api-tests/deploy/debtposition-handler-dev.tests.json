@@ -28,6 +28,10 @@
               "listen": "test",
               "script": {
                 "exec": [
+                  "// keep the created iupd for the invalidation folder, later requests overwrite IUPD",
+                  "if (pm.response.code === 200) {",
+                  "    pm.collectionVariables.set('CREATED_IUPD', pm.collectionVariables.get('IUPD'));",
+                  "}",
                   "pm.test(\"Create debt position - Status code is 200 with created debt position\", function () {",
                   "    pm.response.to.have.status(200);",
                   "    const response = pm.response.json();",
@@ -348,6 +352,242 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Debt position invalidation",
+      "item": [
+        {
+          "name": "Invalidate debt position",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Invalidate debt position - Status code is 204\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Ocp-Apim-Subscription-Key",
+                "value": "{{API_SUBSCRIPTION_KEY}}",
+                "type": "text"
+              },
+              {
+                "key": "x-correlation-id",
+                "value": "{{$guid}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{HOSTNAME}}{{BASE_PATH}}/debt-positions/{{ORG_FISCAL_CODE}}/{{CREATED_IUPD}}/invalidations",
+              "host": [
+                "{{HOSTNAME}}{{BASE_PATH}}"
+              ],
+              "path": [
+                "debt-positions",
+                "{{ORG_FISCAL_CODE}}",
+                "{{CREATED_IUPD}}",
+                "invalidations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invalidate already invalidated debt position",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Invalidate already invalidated debt position - Status code is 409 with problem json\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.status).to.eql(409);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Ocp-Apim-Subscription-Key",
+                "value": "{{API_SUBSCRIPTION_KEY}}",
+                "type": "text"
+              },
+              {
+                "key": "x-correlation-id",
+                "value": "{{$guid}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{HOSTNAME}}{{BASE_PATH}}/debt-positions/{{ORG_FISCAL_CODE}}/{{CREATED_IUPD}}/invalidations",
+              "host": [
+                "{{HOSTNAME}}{{BASE_PATH}}"
+              ],
+              "path": [
+                "debt-positions",
+                "{{ORG_FISCAL_CODE}}",
+                "{{CREATED_IUPD}}",
+                "invalidations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invalidate unknown debt position",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// iupd never created, so GPD answers 404",
+                  "pm.collectionVariables.set('UNKNOWN_IUPD', 'IUPD_POSGW_UNKNOWN_' + Date.now());"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Invalidate unknown debt position - Status code is 404 with problem json\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.status).to.eql(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Ocp-Apim-Subscription-Key",
+                "value": "{{API_SUBSCRIPTION_KEY}}",
+                "type": "text"
+              },
+              {
+                "key": "x-correlation-id",
+                "value": "{{$guid}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{HOSTNAME}}{{BASE_PATH}}/debt-positions/{{ORG_FISCAL_CODE}}/{{UNKNOWN_IUPD}}/invalidations",
+              "host": [
+                "{{HOSTNAME}}{{BASE_PATH}}"
+              ],
+              "path": [
+                "debt-positions",
+                "{{ORG_FISCAL_CODE}}",
+                "{{UNKNOWN_IUPD}}",
+                "invalidations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invalidate debt position with invalid correlation id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Invalidate debt position with invalid correlation id - Status code is 400 with problem json\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.status).to.eql(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Ocp-Apim-Subscription-Key",
+                "value": "{{API_SUBSCRIPTION_KEY}}",
+                "type": "text"
+              },
+              {
+                "key": "x-correlation-id",
+                "value": "not-a-uuid",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{HOSTNAME}}{{BASE_PATH}}/debt-positions/{{ORG_FISCAL_CODE}}/{{CREATED_IUPD}}/invalidations",
+              "host": [
+                "{{HOSTNAME}}{{BASE_PATH}}"
+              ],
+              "path": [
+                "debt-positions",
+                "{{ORG_FISCAL_CODE}}",
+                "{{CREATED_IUPD}}",
+                "invalidations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Invalidate debt position without subscription key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Invalidate debt position without subscription key - Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-correlation-id",
+                "value": "{{$guid}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{HOSTNAME}}{{BASE_PATH}}/debt-positions/{{ORG_FISCAL_CODE}}/{{CREATED_IUPD}}/invalidations",
+              "host": [
+                "{{HOSTNAME}}{{BASE_PATH}}"
+              ],
+              "path": [
+                "debt-positions",
+                "{{ORG_FISCAL_CODE}}",
+                "{{CREATED_IUPD}}",
+                "invalidations"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "variable": [
@@ -361,6 +601,14 @@
     },
     {
       "key": "DUE_DATE",
+      "value": ""
+    },
+    {
+      "key": "CREATED_IUPD",
+      "value": ""
+    },
+    {
+      "key": "UNKNOWN_IUPD",
       "value": ""
     }
   ]
