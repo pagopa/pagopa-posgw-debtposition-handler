@@ -47,8 +47,8 @@ class ExceptionHandler {
                 mapOf(
                     "http_status_code" to e.httpStatusCode.value().toString(),
                     "organization_fiscal_code" to e.organizationFiscalCode,
+                    "operation" to e.operation,
                 ))
-            .attributes(mapOf(LogTracingUtils.Companion.AttributeKeys.EVENT_ACTION to e.operation))
             .failure()
             .logError(
                 logger,
