@@ -447,6 +447,62 @@
           "response": []
         },
         {
+          "name": "Invalidate unknown debt position",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// iupd never created, so GPD answers 404",
+                  "pm.collectionVariables.set('UNKNOWN_IUPD', 'IUPD_POSGW_UNKNOWN_' + Date.now());"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Invalidate unknown debt position - Status code is 404 with problem json\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.status).to.eql(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Ocp-Apim-Subscription-Key",
+                "value": "{{API_SUBSCRIPTION_KEY}}",
+                "type": "text"
+              },
+              {
+                "key": "x-correlation-id",
+                "value": "{{$guid}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{HOSTNAME}}{{BASE_PATH}}/debt-positions/{{ORG_FISCAL_CODE}}/{{UNKNOWN_IUPD}}/invalidations",
+              "host": [
+                "{{HOSTNAME}}{{BASE_PATH}}"
+              ],
+              "path": [
+                "debt-positions",
+                "{{ORG_FISCAL_CODE}}",
+                "{{UNKNOWN_IUPD}}",
+                "invalidations"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Invalidate debt position with invalid correlation id",
           "event": [
             {
@@ -549,6 +605,10 @@
     },
     {
       "key": "CREATED_IUPD",
+      "value": ""
+    },
+    {
+      "key": "UNKNOWN_IUPD",
       "value": ""
     }
   ]
