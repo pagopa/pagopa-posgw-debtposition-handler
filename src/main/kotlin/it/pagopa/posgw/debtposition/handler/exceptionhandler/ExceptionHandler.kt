@@ -48,8 +48,8 @@ class ExceptionHandler {
                 mapOf(
                     "http_status_code" to e.httpStatusCode.value().toString(),
                     "organization_fiscal_code" to e.organizationFiscalCode,
+                    "operation" to e.operation,
                 ))
-            .attributes(mapOf(LogTracingUtils.Companion.AttributeKeys.EVENT_ACTION to e.operation))
             .failure()
             .logError(
                 logger,
@@ -57,27 +57,6 @@ class ExceptionHandler {
                 "Error performing operation ${e.operation}",
             )
         return toResponse(e.toRestException())
-    }
-
-    /**
-     * AppException exception handler. This type of error can be thrown by the GPD client when a
-     * Redis error occurs, caused by an error during the generation of the NAV or Redis unavailable.
-     */
-    @ExceptionHandler(AppException::class)
-    fun handleException(e: AppException): ResponseEntity<ProblemJsonDto> {
-        LogTracingUtils.loggerTracingUtils()
-            .dependency(LogTracingUtils.REDIS_DEPENDENCY)
-            .failure()
-            .details(mapOf("app_error_code_message" to e.message.orEmpty()))
-            .logWithStackTrace(
-                logger,
-                e,
-                "Error performing nav generation operation",
-            )
-        return problem(
-            HttpStatus.SERVICE_UNAVAILABLE.value(),
-            HttpStatus.SERVICE_UNAVAILABLE.reasonPhrase,
-            "Error performing nav generation operation")
     }
 
     /** Fallback for unexpected errors: the exception details are logged but never exposed */

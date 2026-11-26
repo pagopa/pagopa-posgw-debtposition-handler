@@ -52,11 +52,8 @@ class GpdClient(
                         mapOf(
                             "organization_fiscal_code" to organizationFiscalCode,
                             "to_publish" to toPublish.toString(),
+                            "operation" to Operation.CREATE_DEBT_POSITION.name,
                         ))
-                    .attributes(
-                        mapOf(
-                            LogTracingUtils.Companion.AttributeKeys.EVENT_ACTION to
-                                Operation.CREATE_DEBT_POSITION.name))
                     .success()
                     .logInfo(logger, "Debt position created successfully")
             }
@@ -79,11 +76,8 @@ class GpdClient(
                     .details(
                         mapOf(
                             "organization_fiscal_code" to organizationFiscalCode,
+                            "operation" to Operation.INVALIDATE_DEBT_POSITION.name,
                         ))
-                    .attributes(
-                        mapOf(
-                            LogTracingUtils.Companion.AttributeKeys.EVENT_ACTION to
-                                Operation.INVALIDATE_DEBT_POSITION.name))
                     .success()
                     .logInfo(logger, "Debt position invalidated successfully")
             }
