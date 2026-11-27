@@ -17,12 +17,13 @@ class DebtPositionsController(private val debtPositionService: DebtPositionsServ
     override suspend fun createDebtPosition(
         xCorrelationId: UUID,
         orgFiscalCode: String,
-        debtPositionRequestDto: DebtPositionRequestDto
+        debtPositionRequestDto: DebtPositionRequestDto,
+        toPublish: Boolean
     ): ResponseEntity<DebtPositionResponseDto> {
         val debtPositionResponse =
             debtPositionService
                 .createDebtPosition(
-                    orgFiscalCode, debtPositionRequestDto, true, xCorrelationId.toString())
+                    orgFiscalCode, debtPositionRequestDto, toPublish, xCorrelationId.toString())
                 .contextWrite {
                     LogTracingUtils.enrichContextMDC(
                         mapOf(

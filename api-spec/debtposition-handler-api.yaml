@@ -46,6 +46,12 @@ paths:
           schema:
             type: string
             examples: [ "77777777777" ]
+        - name: toPublish
+          in: "query"
+          required: false
+          schema:
+            type: boolean
+            default: true
       requestBody:
         required: true
         content:
@@ -370,7 +376,7 @@ components:
         iuv:
           type: string
           examples:
-              - "020001000000123456"
+            - "020001000000123456"
         iupd:
           type: string
           examples:

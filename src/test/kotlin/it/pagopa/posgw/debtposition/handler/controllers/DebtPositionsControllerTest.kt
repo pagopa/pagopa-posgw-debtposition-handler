@@ -114,7 +114,7 @@ class DebtPositionsControllerTest {
 
         val response =
             controller.createDebtPosition(
-                correlationId, orgFiscalCode, buildSampleDebtPositionRequestDto())
+                correlationId, orgFiscalCode, buildSampleDebtPositionRequestDto(), true)
 
         assertEquals(HttpStatus.OK, response.statusCode)
         assertEquals(expectedResponse, response.body)
@@ -133,7 +133,7 @@ class DebtPositionsControllerTest {
         val thrown =
             assertThrows<GpdClientException> {
                 controller.createDebtPosition(
-                    correlationId, orgFiscalCode, buildSampleDebtPositionRequestDto())
+                    correlationId, orgFiscalCode, buildSampleDebtPositionRequestDto(), true)
             }
         assertEquals(error, thrown)
     }
