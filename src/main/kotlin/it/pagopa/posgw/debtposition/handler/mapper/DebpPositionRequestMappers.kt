@@ -77,7 +77,9 @@ private fun TransferItemDto.toGpdTransfer(
         .category(this.category)
         .iban(this.iban)
 
-// Metadata is optional: anything that is not a flat map of scalar values is ignored
+// Metadata is optional: anything that is not a flat map of scalar values is ignored.
+// Returns java.util.LinkedHashSet on purpose: Kotlin's EmptySet breaks Jackson's Kotlin module in
+// the native image.
 private fun toMetadata(metadata: Any?): Set<InstallmentMetadataModelDto> =
     (metadata as? Map<*, *>)
         ?.mapNotNull { (key, value) ->
@@ -87,4 +89,4 @@ private fun toMetadata(metadata: Any?): Set<InstallmentMetadataModelDto> =
                 null
             }
         }
-        ?.toSet() ?: emptySet()
+        ?.toCollection(LinkedHashSet()) ?: LinkedHashSet()
