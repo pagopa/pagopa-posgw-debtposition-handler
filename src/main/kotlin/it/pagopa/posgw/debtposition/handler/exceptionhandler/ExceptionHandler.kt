@@ -42,20 +42,28 @@ class ExceptionHandler {
     /** GpdClientException exception handler */
     @ExceptionHandler(GpdClientException::class)
     fun handleException(e: GpdClientException): ResponseEntity<ProblemJsonDto> {
-        LogTracingUtils.loggerTracingUtils()
-            .dependency(LogTracingUtils.GPD_DEPENDENCY)
-            .details(
-                mapOf(
-                    "http_status_code" to e.httpStatusCode.value().toString(),
-                    "organization_fiscal_code" to e.organizationFiscalCode,
-                    "operation" to e.operation,
-                ))
-            .failure()
-            .logError(
+        val log =
+            LogTracingUtils.loggerTracingUtils()
+                .dependency(LogTracingUtils.GPD_DEPENDENCY)
+                .details(
+                    mapOf(
+                        "http_status_code" to e.httpStatusCode.value().toString(),
+                        "organization_fiscal_code" to e.organizationFiscalCode,
+                        "operation" to e.operation))
+                .failure()
+        if (e.cause != null) {
+            log.logWithStackTrace(
+                logger,
+                e.cause,
+                "Error performing operation ${e.operation}",
+            )
+        } else {
+            log.logError(
                 logger,
                 e,
                 "Error performing operation ${e.operation}",
             )
+        }
         return toResponse(e.toRestException())
     }
 

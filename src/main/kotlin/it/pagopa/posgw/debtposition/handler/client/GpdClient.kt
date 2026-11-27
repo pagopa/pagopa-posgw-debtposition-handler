@@ -152,7 +152,8 @@ class GpdClient(
                     description = "Unexpected error while invoking GPD for operation $operation",
                     httpStatusCode = HttpStatus.BAD_GATEWAY,
                     operation = operation.name,
-                    organizationFiscalCode = organizationFiscalCode)
+                    organizationFiscalCode = organizationFiscalCode,
+                    cause = t)
             }
         }
     }
