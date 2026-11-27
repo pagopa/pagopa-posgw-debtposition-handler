@@ -162,12 +162,21 @@ class GpdClientTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = [400, 404, 409, 422])
+    @ValueSource(ints = [400, 409, 422])
     fun `Should map 4xx to conflict when invalidating a debt position`(status: Int) {
         invalidateFailsWith(webClientError(status))
             .expectGpdError(
                 HttpStatus.CONFLICT,
                 "Client error while invoking GPD for operation ${Operation.INVALIDATE_DEBT_POSITION} with status code from GPD ${HttpStatus.valueOf(status)}")
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = [404])
+    fun `Should map 404 to not found error when invalidating a debt position`(status: Int) {
+        invalidateFailsWith(webClientError(status))
+            .expectGpdError(
+                HttpStatus.NOT_FOUND,
+                "Debt position not found in GPD for operation ${Operation.INVALIDATE_DEBT_POSITION} with status code from GPD ${HttpStatus.valueOf(status)}")
     }
 
     @ParameterizedTest

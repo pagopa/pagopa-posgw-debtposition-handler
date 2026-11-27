@@ -6,7 +6,8 @@ class GpdClientException(
     val description: String,
     val httpStatusCode: HttpStatusCode,
     val operation: String,
-    val organizationFiscalCode: String
+    val organizationFiscalCode: String,
+    override val cause: Throwable? = null
 ) : ApiError(description) {
     override fun toRestException() =
         RestApiException(

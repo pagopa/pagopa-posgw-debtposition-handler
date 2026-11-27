@@ -48,6 +48,8 @@ object Deps {
 
 // posgw-common library version
 val posgwCommonVersion = "1.2.0"
+// Notice Number(NAV) Generator library version
+val noticeNumberGeneratorVersion = "1.0.1"
 
 dependencies {
   // Open telemetry instrumentation
@@ -78,6 +80,13 @@ dependencies {
 
   // posgw-common library
   implementation("it.pagopa:pagopa-posgw-common:${posgwCommonVersion}")
+
+  // Notice Number(NAV) Generator library
+  implementation("it.gov.pagopa:pagopa-noticenumber-generator:${noticeNumberGeneratorVersion}") {
+    // the library pulls in Spring MVC, which turns this WebFlux app into a servlet (Tomcat)
+    // application
+    exclude(group = "org.springframework.boot", module = "spring-boot-starter-web")
+  }
 
   // Source: https://mvnrepository.com/artifact/io.micrometer/context-propagation
   implementation("io.micrometer:context-propagation:${Deps.MICROMETER_CONTEXT_PROPAGATION_VERSION}")

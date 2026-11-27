@@ -112,6 +112,22 @@ class GpdClient(
                             operation = operation.name,
                             organizationFiscalCode = organizationFiscalCode)
                     }
+                    t.statusCode == HttpStatus.NOT_FOUND -> {
+                        if (operation == Operation.INVALIDATE_DEBT_POSITION)
+                            GpdClientException(
+                                description =
+                                    "Debt position not found in GPD for operation $operation with status code from GPD ${t.statusCode}",
+                                httpStatusCode = HttpStatus.NOT_FOUND,
+                                operation = operation.name,
+                                organizationFiscalCode = organizationFiscalCode)
+                        else
+                            GpdClientException(
+                                description =
+                                    "Client error while invoking GPD for operation $operation with status code from GPD ${t.statusCode}",
+                                httpStatusCode = HttpStatus.CONFLICT,
+                                operation = operation.name,
+                                organizationFiscalCode = organizationFiscalCode)
+                    }
                     t.statusCode.is4xxClientError -> {
                         GpdClientException(
                             description =
@@ -136,7 +152,8 @@ class GpdClient(
                     description = "Unexpected error while invoking GPD for operation $operation",
                     httpStatusCode = HttpStatus.BAD_GATEWAY,
                     operation = operation.name,
-                    organizationFiscalCode = organizationFiscalCode)
+                    organizationFiscalCode = organizationFiscalCode,
+                    cause = t)
             }
         }
     }
