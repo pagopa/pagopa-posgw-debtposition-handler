@@ -34,6 +34,21 @@ class ExceptionHandlerTests {
     }
 
     @Test
+    fun `test handle a GpdClientException with cause not null`() {
+        val gpdClientException =
+            GpdClientException(
+                description = "Test GPD client exception",
+                httpStatusCode = HttpStatus.BAD_GATEWAY,
+                operation = "TestOperation",
+                organizationFiscalCode = "12345678901",
+                cause = Exception("Test cause"))
+        val responseEntity = exceptionHandler.handleException(gpdClientException)
+        assert(responseEntity.statusCode == HttpStatus.BAD_GATEWAY)
+        assert(responseEntity.body?.detail == "Test GPD client exception")
+        assert(responseEntity.body?.title == "GPD Invocation exception")
+    }
+
+    @Test
     fun `test handle a RestApiException`() {
         val restApiException =
             it.pagopa.posgw.debtposition.handler.exception.RestApiException(
