@@ -82,7 +82,11 @@ dependencies {
   implementation("it.pagopa:pagopa-posgw-common:${posgwCommonVersion}")
 
   // Notice Number(NAV) Generator library
-  implementation("it.gov.pagopa:pagopa-noticenumber-generator:${noticeNumberGeneratorVersion}")
+  implementation("it.gov.pagopa:pagopa-noticenumber-generator:${noticeNumberGeneratorVersion}") {
+    // the library pulls in Spring MVC, which turns this WebFlux app into a servlet (Tomcat)
+    // application
+    exclude(group = "org.springframework.boot", module = "spring-boot-starter-web")
+  }
 
   // Source: https://mvnrepository.com/artifact/io.micrometer/context-propagation
   implementation("io.micrometer:context-propagation:${Deps.MICROMETER_CONTEXT_PROPAGATION_VERSION}")
