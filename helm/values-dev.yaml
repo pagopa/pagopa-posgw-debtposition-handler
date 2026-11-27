@@ -86,6 +86,8 @@ microservice-chart:
     GPD_CONNECTION_TIMEOUT: "1000"
     REDIS_PORT: "10000"
     REDIS_TIMEOUT: "2000ms"
+    REDIS_SSL_ENABLED: "true"
+    REDIS_CONNECTION_TIMEOUT: "2000ms"
   envSecret:
     GPD_API_KEY: gpd-api-key
     REDIS_HOST: redis-posgw-hostname
