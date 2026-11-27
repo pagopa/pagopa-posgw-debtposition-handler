@@ -122,7 +122,17 @@ $ ./gradlew test
 
 #### Integration testing
 
-TODO
+The [Postman](https://www.postman.com/) collection `api-tests/code-review/debtposition-handler-local.tests.json` calls the services defined in the posgw-local repo.
+The code review pipeline runs it with [newman](https://github.com/postmanlabs/newman) in the `IntegrationTest` stage after each push on the branch.
+
+To run it locally:
+
+```shell
+newman run api-tests/code-review/debtposition-handler-local.tests.json \
+   --environment=api-tests/code-review/debtposition-handler-local.env.json \
+   --reporters cli,junit \
+   --reporter-junit-export Results/debtposition-handler-TEST.xml
+```
 
 ### Pos-gateway Common Library
 

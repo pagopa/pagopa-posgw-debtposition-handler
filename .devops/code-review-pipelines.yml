@@ -9,6 +9,15 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
+
+resources:
+  repositories:
+    - repository: pagopaPosgwLocal
+      type: github
+      name: pagopa/pagopa-posgw-local
+      ref: main
+      endpoint: 'io-azure-devops-github-ro'
+
 stages:
   - stage: BuildEndUnitTest
     jobs:
@@ -67,3 +76,46 @@ stages:
               summaryFileLocation: 'build/reports/jacoco/test/jacocoTestReport.xml'
               reportDirectory: 'build/reports/jacoco/test/html'
             displayName: 'Publish Code Coverage on Azure Devops'
+
+  - stage: IntegrationTest
+    dependsOn: [ ]
+    jobs:
+      - job: make_integration_test
+        steps:
+          - checkout: self
+            path: s/debtposition-handler
+          - checkout: pagopaPosgwLocal
+            path: s/posgw-local
+          - script: |
+              echo "##[debug] Change placeholder for posgw-debtposition-handler set branch: $(BRANCH_NAME)"
+              [ -z "$(BRANCH_NAME)" ] || sed -i "s|^POSGW_DEBTPOSITION_HANDLER_GIT_REF=.*$|POSGW_DEBTPOSITION_HANDLER_GIT_REF=$(BRANCH_NAME)|" .env
+            displayName: 'Change debtposition-handler branch name in posgw-local .env'
+            workingDirectory: posgw-local
+          - script: docker compose up pagopa-posgw-debtposition-handler -d
+            displayName: 'Run app with docker-compose'
+            workingDirectory: posgw-local
+            env:
+              GITHUB_TOKEN: $(GITHUB_RO_TOKEN)
+          - script: |
+              timeout 180 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:8081/actuator/health/liveness)" != "200" ]]; do sleep 5; done' || exit 1
+            displayName: 'Health check'
+          - script: yarn global add newman
+            displayName: 'newman installation'
+          - script: newman run api-tests/code-review/debtposition-handler-local.tests.json --environment=api-tests/code-review/debtposition-handler-local.env.json --reporters cli,junit --reporter-junit-export Results/debtposition-handler-TEST.xml
+            displayName: 'Run api test for debtposition-handler'
+            workingDirectory: debtposition-handler
+          - task: PublishTestResults@2
+            inputs:
+              testResultsFormat: 'JUnit'
+              testResultsFiles: '**/*-TEST.xml'
+              searchFolder: debtposition-handler
+          - script: |
+              echo "Printing logs for all running containers:"
+              for container in $(docker ps -q); do
+                name=$(docker inspect --format='{{.Name}}' $container | sed 's/^\/\(.*\)/\1/')
+                echo "===== Logs for $name ====="
+                docker logs $container
+                echo "===== End of logs for $name ====="
+              done
+            condition: always()
+            displayName: 'Print Docker container logs'
